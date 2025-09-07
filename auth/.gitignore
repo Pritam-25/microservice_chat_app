@@ -1,0 +1,78 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Node modules
+node_modules/
+
+# Dependency caches
+.pnp
+.pnp.js
+.yarn/
+.npm/
+
+# TypeScript
+*.tsbuildinfo
+
+# Build output
+dist/
+build/
+out/
+
+# Coverage
+coverage/
+.nyc_output/
+
+# Env files
+.env
+.env.*
+!.env.example
+
+# OS-specific
+.DS_Store
+Thumbs.db
+
+# IDE/editor
+.vscode/
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/
+*.iml
+
+# Debug & profiler
+.node_repl_history
+*.pid
+*.seed
+*.pid.lock
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# ESLint/Prettier caches
+.eslintcache
+.stylelintcache
+
+# Prisma
+prisma/*.db
+prisma/*.db-journal
+
+# Docker
+.docker/
+docker-compose.override.yml
+
+# PM2/forever
+pids
+logs/
+
+# Next/React build artifacts (if any sub-app embeds)
+.next/
+.vercel/
+
+# Coverage tools
+lcov.info

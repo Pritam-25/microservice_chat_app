@@ -1,0 +1,18 @@
+# Local development files
+node_modules
+dist
+.next
+.env
+*.env
+.pnpm-store
+
+# Editor artifacts
+.vscode
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+.npmrc
+
+# Git
+.git
+.gitignore

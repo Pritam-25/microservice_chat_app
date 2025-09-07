@@ -1,0 +1,26 @@
+{
+  "compilerOptions": {
+    /* Language and Environment */
+    "target": "ES2020",                     /* More modern JS output */
+    "module": "CommonJS",
+    "rootDir": "src",
+    "outDir": "dist",
+    "strict": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+
+    /* ✅ Path alias setup */
+    "baseUrl": "src",                       /* Base folder for imports */
+    "paths": {
+      "@/*": ["*"],                         /* Root import */
+      "@/models/*": ["models/*"],           /* Database models */
+      "@/api/*": ["api/*"],                 /* API (controllers, routes, schemas) */
+      "@/middleware/*": ["middleware/*"],   /* Middlewares */
+      "@/config/*": ["config/*"],           /* Configs (DB, env, etc.) */
+      "@/utils/*": ["utils/*"]              /* Helpers / utilities */
+    }
+  },
+  "include": ["src"],
+  "exclude": ["node_modules", "dist"]
+}
