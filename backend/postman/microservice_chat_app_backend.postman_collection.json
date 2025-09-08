@@ -1,0 +1,304 @@
+{
+  "info": {
+    "name": "Microservice Chat App - Backend APIs",
+    "_postman_id": "c7f6a1f4-6b9e-4b3b-9d8f-2f0db4e5a111",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Postman collection to validate Conversations and Messages APIs (pair/group creation, listing, sending, fetching). Includes tests to store conversation IDs for chaining."
+  },
+  "variable": [
+    {
+      "key": "pairConversationId",
+      "value": ""
+    },
+    {
+      "key": "groupConversationId",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "Conversations",
+      "item": [
+        {
+          "name": "Create pair (participants)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/conversations/pair",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "conversations",
+                "pair"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"participants\": [\"{{userA}}\", \"{{userB}}\"]\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 201', function () { pm.response.to.have.status(201); });",
+                  "const res = pm.response.json();",
+                  "if (res.conversation && res.conversation._id) {",
+                  "  pm.collectionVariables.set('pairConversationId', res.conversation._id);",
+                  "  console.log('pairConversationId set:', res.conversation._id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create group",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/conversations/group",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "conversations",
+                "group"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Friends\",\n  \"participants\": [\"{{userA}}\", \"{{userB}}\", \"{{extra}}\"],\n  \"admins\": [\"{{userA}}\"],\n  \"createdBy\": \"{{userA}}\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 201', function () { pm.response.to.have.status(201); });",
+                  "const res = pm.response.json();",
+                  "if (res.conversation && res.conversation._id) {",
+                  "  pm.collectionVariables.set('groupConversationId', res.conversation._id);",
+                  "  console.log('groupConversationId set:', res.conversation._id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create group (duplicate - expect 409)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/conversations/group",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "conversations",
+                "group"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Friends\",\n  \"participants\": [\"{{userA}}\", \"{{userB}}\", \"{{extra}}\"],\n  \"admins\": [\"{{userA}}\"],\n  \"createdBy\": \"{{userA}}\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 409', function () { pm.response.to.have.status(409); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List conversations for userA",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/conversations/{{userA}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "conversations",
+                "{{userA}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Messages",
+      "item": [
+        {
+          "name": "Send to pair (text)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/messages",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "messages"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"conversation\": \"{{pairConversationId}}\",\n  \"sender\": \"{{userA}}\",\n  \"type\": \"text\",\n  \"text\": \"Hello via REST!\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 201', function () { pm.response.to.have.status(201); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Send to group (attachment)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/messages",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "messages"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"conversation\": \"{{groupConversationId}}\",\n  \"sender\": \"{{userA}}\",\n  \"type\": \"image\",\n  \"attachments\": [\n    { \"url\": \"https://example.com/pic.jpg\", \"mimeType\": \"image/jpeg\", \"name\": \"pic.jpg\", \"size\": 12345 }\n  ]\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 201', function () { pm.response.to.have.status(201); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Fetch messages (pair)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/messages/{{pairConversationId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "messages",
+                "{{pairConversationId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Fetch messages (group)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/messages/{{groupConversationId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "messages",
+                "{{groupConversationId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
