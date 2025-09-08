@@ -3,13 +3,14 @@ import {
   getOrCreatePairService,
   createGroupConversationService,
   getUserConversationsService,
-} from "../services/conversation.service"
+} from "@/api/v1/services/index.js"
 import { ZodError } from "zod";
 import {
   CreatePairBodySchema,
   CreateGroupBodySchema,
   GetUserConversationsParamsSchema,
-} from "../schemas/conversation.zod"
+} from "@/api/v1/schemas/index.js";
+
 
 
 // Create or get a 1:1 conversation

@@ -1,6 +1,6 @@
 import type { Request, Response, NextFunction } from "express"
 import { Types } from "mongoose"
-import { Conversation } from "@/models/conversation"
+import { Conversation } from "@/models/conversation.js"
 
 // Ensures the authenticated user is a participant of the conversation
 // For GET /messages/:conversationId -> use req.params.conversationId

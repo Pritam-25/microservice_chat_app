@@ -1,6 +1,6 @@
 import type { Socket } from "socket.io"
 import { Types } from "mongoose"
-import { Conversation } from "@/models/conversation"
+import { Conversation } from "@/models/conversation.js"
 
 export async function assertMembershipOrEmit(
   socket: Socket,

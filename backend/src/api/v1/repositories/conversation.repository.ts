@@ -1,5 +1,5 @@
 import { Types } from "mongoose"
-import { Conversation, IConversation } from "@/models/conversation"
+import { Conversation, IConversation } from "@/models/conversation.js"
 
 export const getOrCreatePairRepo = async (
   userA: Types.ObjectId,

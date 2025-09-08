@@ -1,4 +1,4 @@
-import { IMessage, Message } from "@/models/message";
+import { IMessage, Message } from "@/models/message.js";
 import type { UpdateQuery } from "mongoose";
 
 

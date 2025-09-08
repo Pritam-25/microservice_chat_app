@@ -1,7 +1,7 @@
 import { Router } from "express";
-import { createMessage, getMessagesByConversation } from "../controllers/message.controller";
-import verifyAuth from "@/middleware/verifyAuth";
-import ensureParticipant from "@/middleware/ensureParticipant";
+import { createMessage, getMessagesByConversation } from "@/api/v1/controllers/index.js";
+import verifyAuth from "@/middleware/verifyAuth.js";
+import ensureParticipant from "@/middleware/ensureParticipant.js";
 
 const router = Router();
 

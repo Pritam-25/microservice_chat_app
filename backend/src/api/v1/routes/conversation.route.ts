@@ -3,9 +3,9 @@ import {
   createPairConversation,
   createGroupConversation,
   getUserConversations,
-} from "../controllers/conversation.controller"
-import verifyAuth from "../../../middleware/verifyAuth"
-import ensureSameUserParam from "../../../middleware/ensureSameUserParam"
+} from "@/api/v1/controllers/index.js"
+import verifyAuth from "@/middleware/verifyAuth.js"
+import ensureSameUserParam from "@/middleware/ensureSameUserParam.js"
 
 const router = Router()
 

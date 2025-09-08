@@ -4,7 +4,7 @@ import {
   findGroupByGKeyRepo,
   createGroupRepo,
   getConversationsByUserRepo,
-} from "@/api/v1/repositories/conversation.repository"
+} from "@/api/v1/repositories/index.js"
 
 
 // Get or create 1:1 conversation

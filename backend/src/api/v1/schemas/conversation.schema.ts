@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { zId } from "@zodyac/zod-mongoose";
+import { zId } from "./common.js";
 
 // Accept either explicit userA/userB or participants array of exactly 2
 export const CreatePairBodySchema = z.union([

@@ -1,10 +1,10 @@
 import { Server, Socket } from "socket.io";
-import { MessageSchema } from "@/api/v1/schemas/message.zod";
-import * as messageService from "@/api/v1/services/message.service";
-import { Conversation } from "@/models/conversation";
-import { Message } from "@/models/message";
-import { assertMembershipOrEmit } from "./guards";
-import { addOnlineUser, removeOnlineUser } from "./presence";
+import { MessageSchema } from "@/api/v1/schemas/index.js";
+import * as messageService from "@/api/v1/services/index.js";
+import { Conversation } from "@/models/conversation.js";
+import { Message } from "@/models/message.js";
+import { assertMembershipOrEmit } from "./guards.js";
+import { addOnlineUser, removeOnlineUser } from "./presence.js";
 
 export const registerMessageHandlers = (io: Server, socket: Socket) => {
   console.log("✅ Message socket connected:", socket.id);

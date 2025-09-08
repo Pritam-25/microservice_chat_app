@@ -1,46 +1,60 @@
-version: "3.8"
-
 services:
   auth:
     build: ./auth
-    ports:
-      - "5000:5000"
     environment:
-      - PORT=5000
+      NODE_ENV: "${NODE_ENV:-development}"
+      PORT: "${AUTH_PORT:-5000}"
+      MONGO_URI: "${MONGO_ATLAS_URI}"
+      JWT_SECRET: "${JWT_SECRET}"
+    ports:
+      - "${AUTH_PORT:-5000}:5000"
 
   backend1:
     build: ./backend
-    ports:
-      - "4000:4000"
     environment:
-      - PORT=4000
-      - AUTH_URL=http://auth:5000
+      NODE_ENV: "${NODE_ENV:-development}"
+      PORT: "${BACKEND1_PORT:-4000}"
+      AUTH_URL: "${AUTH_INTERNAL_URL:-http://auth:5000}"
+      MONGO_URI: "${MONGO_ATLAS_URI}"
+      JWT_SECRET: "${JWT_SECRET}"
+    ports:
+      - "${BACKEND1_PORT:-4000}:4000"
+    depends_on:
+      - auth
 
   backend2:
     build: ./backend
-    ports:
-      - "4002:4002"
     environment:
-      - PORT=4002
-      - AUTH_URL=http://auth:5000
+      NODE_ENV: "${NODE_ENV:-development}"
+      PORT: "${BACKEND2_PORT:-4002}"
+      AUTH_URL: "${AUTH_INTERNAL_URL:-http://auth:5000}"
+      MONGO_URI: "${MONGO_ATLAS_URI}"
+      JWT_SECRET: "${JWT_SECRET}"
+    ports:
+      - "${BACKEND2_PORT:-4002}:4002"
+    depends_on:
+      - auth
 
   frontend1:
     build: ./frontend
-    ports:
-      - "3000:3000"
     environment:
-      - PORT=3000
-      - BACKEND_URL=http://backend1:4000
-      - AUTH_URL=http://auth:5000
+      PORT: "${FRONTEND1_PORT:-3000}"
+      BACKEND_URL: "${FRONTEND1_BACKEND_URL:-http://backend1:4000}"
+      AUTH_URL: "${FRONTEND_AUTH_URL:-http://auth:5000}"
+    ports:
+      - "${FRONTEND1_PORT:-3000}:3000"
 
   frontend2:
     build: ./frontend
-    ports:
-      - "3001:3001"
     environment:
-      - PORT=3001
-      - BACKEND_URL=http://backend2:4002
-      - AUTH_URL=http://auth:5000
+      PORT: "${FRONTEND2_PORT:-3001}"
+      BACKEND_URL: "${FRONTEND2_BACKEND_URL:-http://backend2:4002}"
+      AUTH_URL: "${FRONTEND_AUTH_URL:-http://auth:5000}"
+    ports:
+      - "${FRONTEND2_PORT:-3001}:3001"
+
+volumes:
+  mongo_data: {}
 
 networks:
   default:

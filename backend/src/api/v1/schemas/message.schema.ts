@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { zId } from "@zodyac/zod-mongoose";
+import { zId } from "./common.js";
 
 
 

@@ -5,13 +5,11 @@ import type { Request, Response } from "express";
 import "dotenv/config";
 import { createServer } from "http";
 import { Server } from "socket.io";
-import ConversationRouter from "./api/v1/routes/conversation.route";
-import messageRoutes from "./api/v1/routes/message.route";
-import connectDB from "./config/db";
-import { registerMessageHandlers } from "./sockets/message.socket";
-import { registerSocketAuth } from "./sockets/socketAuth";
-import { getOnlineUserIds } from "./sockets/presence";
-import verifyAuth from "./middleware/verifyAuth";
+import ConversationRouter from "@/api/v1/routes/conversation.route.js";
+import messageRoutes from "@/api/v1/routes/message.route.js";
+import connectDB from "@/config/db.js";
+import { registerMessageHandlers, registerSocketAuth, getOnlineUserIds } from "@/sockets/index.js";
+import verifyAuth from "@/middleware/verifyAuth.js";
 
 const PORT = process.env.PORT || 4000;
 
