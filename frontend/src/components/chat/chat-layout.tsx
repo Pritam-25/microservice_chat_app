@@ -39,6 +39,9 @@ export default function ChatLayout() {
   const [activeUser, setActiveUser] = useState<User | null>(null)
   const { socket, setActiveConversationId, setMessages, conversationsVersion, activeConversationId } = useChatStore()
   const [previews, setPreviews] = useState<ConversationPreview[]>([])
+  // Central API base so it's available in all handlers/effects
+  const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"
+  console.log(`frontend listening to: ${apiBase}`)
 
   // If a group is active, derive its display name from previews
   const activeGroupName = useMemo(() => {
@@ -59,7 +62,7 @@ export default function ChatLayout() {
       const me = users.find(u => u.username === authUser)
       if (!me) return
       try {
-        const res = await axios.get(`http://localhost:4000/api/v1/conversations/${me._id}`, { withCredentials: true })
+        const res = await axios.get(`${apiBase}/api/v1/conversations/${me._id}`, { withCredentials: true })
         const data: ApiConversation[] = Array.isArray(res.data?.conversations) ? res.data.conversations as ApiConversation[] : []
         const mapped: ConversationPreview[] = data.map((c) => {
           const inferredGroup = c.isGroup ?? (!!c.name || (Array.isArray(c.participants) && c.participants.length > 2))
@@ -111,7 +114,7 @@ export default function ChatLayout() {
         lastPairKeyRef.current = pairKey
         // Create or fetch pair conversation
         const res = await axios.post(
-          "http://localhost:4000/api/v1/conversations/pair",
+          `${apiBase}/api/v1/conversations/pair`,
           { participants: [me._id, activeUser._id] },
           { withCredentials: true }
         )
@@ -123,7 +126,7 @@ export default function ChatLayout() {
         if (socket) socket.emit("join_conversation", conversationId)
         // fetch messages
         const mRes = await axios.get(
-          `http://localhost:4000/api/v1/messages/${conversationId}`,
+          `${apiBase}/api/v1/messages/${conversationId}`,
           { withCredentials: true }
         )
         type ApiMessage = { _id: string; conversation: string; sender: string; receiver?: string; text?: string; createdAt?: string; status?: 'sent' | 'delivered' | 'read' }
@@ -261,7 +264,7 @@ export default function ChatLayout() {
               setActiveConversationId(id)
               if (socket) socket.emit("join_conversation", id)
               const mRes = await axios.get(
-                `http://localhost:4000/api/v1/messages/${id}`,
+                `${apiBase}/api/v1/messages/${id}`,
                 { withCredentials: true }
               )
               type ApiMessage = { _id: string; conversation: string; sender: string; receiver?: string; text?: string; createdAt?: string; status?: 'sent' | 'delivered' | 'read' }

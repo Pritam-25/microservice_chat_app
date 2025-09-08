@@ -17,7 +17,8 @@ export default function ChatApp() {
 
   const getUsers = async () => {
     try {
-      const response = await axios.get("http://localhost:5000/api/v1/users", { withCredentials: true });
+      const authBase = process.env.NEXT_PUBLIC_AUTH_URL || "http://localhost:5000";
+      const response = await axios.get(`${authBase}/api/v1/users`, { withCredentials: true });
       updateUsers(response.data);
     } catch (error) {
       console.error("Error fetching users:", error);
@@ -29,7 +30,8 @@ export default function ChatApp() {
     (async () => {
       // Load users first so we can compute `me` reliably for delivery/read acks
       await getUsers();
-      const socketInstance: Socket = io("http://localhost:4000", {
+      const socketUrl = process.env.NEXT_PUBLIC_SOCKET_URL || "http://localhost:4000";
+      const socketInstance: Socket = io(socketUrl, {
         withCredentials: true,
       });
       setSocket(socketInstance)

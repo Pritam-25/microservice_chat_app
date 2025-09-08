@@ -11,7 +11,8 @@ export default function SignUpPage() {
     let active = true
       ; (async () => {
         try {
-          await axios.get("http://localhost:5000/api/v1/auth/me", { withCredentials: true })
+          const authBase = process.env.NEXT_PUBLIC_AUTH_URL || "http://localhost:5000"
+          await axios.get(`${authBase}/api/v1/auth/me`, { withCredentials: true })
           if (!active) return
           router.replace("/chat")
         } catch {

@@ -11,7 +11,8 @@ export default function LoginPage() {
     let active = true
       ; (async () => {
         try {
-          await axios.get("http://localhost:5000/api/v1/auth/me", { withCredentials: true })
+          const authBase = process.env.NEXT_PUBLIC_AUTH_URL || "http://localhost:5000"
+          await axios.get(`${authBase}/api/v1/auth/me`, { withCredentials: true })
           if (!active) return
           router.replace("/chat")
         } catch {
@@ -22,7 +23,7 @@ export default function LoginPage() {
       active = false
     }
   }, [router])
-  
+
   return (
     <div className="bg-muted flex min-h-svh flex-col items-center justify-center p-6 md:p-10">
       <div className="w-full max-w-sm md:max-w-3xl">

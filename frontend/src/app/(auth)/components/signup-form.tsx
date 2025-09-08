@@ -46,7 +46,8 @@ export function SignUpForm({
 
   const onSubmit = async (values: SignupInput) => {
     try {
-      const response = await axios.post("http://localhost:5000/api/v1/auth/signup", values, { withCredentials: true })
+      const authBase = process.env.NEXT_PUBLIC_AUTH_URL || "http://localhost:5000"
+      const response = await axios.post(`${authBase}/api/v1/auth/signup`, values, { withCredentials: true })
 
       // Handle success
       toast.success("Successfuly signed up!")

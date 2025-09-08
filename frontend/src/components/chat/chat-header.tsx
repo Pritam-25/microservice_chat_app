@@ -18,7 +18,8 @@ export default function ChatHeader({ activeUser, groupName }: { activeUser: User
     const controller = new AbortController()
     const load = async () => {
       try {
-        const res = await fetch("http://localhost:4000/online-users", {
+        const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"
+        const res = await fetch(`${apiBase}/online-users`, {
           credentials: "include",
           signal: controller.signal,
         })

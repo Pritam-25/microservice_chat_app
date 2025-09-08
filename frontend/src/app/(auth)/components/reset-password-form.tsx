@@ -46,8 +46,9 @@ export function ResetPasswordForm({
         return
       }
 
+      const authBase = process.env.NEXT_PUBLIC_AUTH_URL || "http://localhost:5000"
       const res = await axios.post(
-        `http://localhost:5000/auth/v1/reset-password/${token}`,
+        `${authBase}/auth/v1/reset-password/${token}`,
         {
           newPassword: values.newPassword,
           confirmNewPassword: values.confirmNewPassword,

@@ -34,8 +34,9 @@ export function ForgotPasswordForm({
 
   const onSubmit = async (values: ForgotPasswordInput) => {
     try {
+      const authBase = process.env.NEXT_PUBLIC_AUTH_URL || "http://localhost:5000"
       const response = await axios.post(
-        "http://localhost:5000/auth/v1/forgot-password",
+        `${authBase}/auth/v1/forgot-password`,
         values
       )
 

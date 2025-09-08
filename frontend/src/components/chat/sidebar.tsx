@@ -100,7 +100,8 @@ export default function Sidebar({ users, onSelect, onSelectGroup, activeUserId, 
                 className="gap-2 text-red-600 focus:text-red-600"
                 onClick={async () => {
                   try {
-                    await axios.post("http://localhost:5000/api/v1/auth/logout", {}, { withCredentials: true })
+                    const authBase = process.env.NEXT_PUBLIC_AUTH_URL || "http://localhost:5000"
+                    await axios.post(`${authBase}/api/v1/auth/logout`, {}, { withCredentials: true })
                     // Basic client sign-out: clear authUser; in a full app, also redirect to login
                     // eslint-disable-next-line @typescript-eslint/no-unused-expressions
                     authUser && console.log("Logged out:", authUser)
@@ -335,8 +336,9 @@ export default function Sidebar({ users, onSelect, onSelectGroup, activeUserId, 
                   participants,
                   createdBy: me._id,
                 }
+                const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"
                 const res = await axios.post(
-                  "http://localhost:4000/api/v1/conversations/group",
+                  `${apiBase}/api/v1/conversations/group`,
                   payload,
                   { withCredentials: true }
                 )

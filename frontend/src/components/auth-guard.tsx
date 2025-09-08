@@ -18,7 +18,8 @@ export default function AuthGuard({ children }: Props) {
     let isMounted = true
     const checkAuth = async () => {
       try {
-        const res = await axios.get("http://localhost:5000/api/v1/auth/me", {
+        const authBase = process.env.NEXT_PUBLIC_AUTH_URL || "http://localhost:5000"
+        const res = await axios.get(`${authBase}/api/v1/auth/me`, {
           withCredentials: true,
         })
         if (!isMounted) return
