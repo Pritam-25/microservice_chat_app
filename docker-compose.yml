@@ -2,56 +2,75 @@ services:
   auth:
     build: ./auth
     environment:
-      NODE_ENV: "${NODE_ENV:-development}"
-      PORT: "${AUTH_PORT:-5000}"
-      MONGO_URI: "${MONGO_ATLAS_URI}"
-      JWT_SECRET: "${JWT_SECRET}"
+      NODE_ENV: ${NODE_ENV:-development}
+      PORT: ${AUTH_PORT:-5000}
+      MONGO_URI: ${MONGO_ATLAS_URI}
+      JWT_SECRET: ${JWT_SECRET}
     ports:
-      - "${AUTH_PORT:-5000}:5000"
+      - ${AUTH_PORT:-5000}:5000
 
   backend1:
     build: ./backend
     environment:
-      NODE_ENV: "${NODE_ENV:-development}"
-      PORT: "${BACKEND1_PORT:-4000}"
-      AUTH_URL: "${AUTH_INTERNAL_URL:-http://auth:5000}"
-      MONGO_URI: "${MONGO_ATLAS_URI}"
-      JWT_SECRET: "${JWT_SECRET}"
+      NODE_ENV: ${NODE_ENV:-development}
+      PORT: ${BACKEND1_PORT:-4000}
+      AUTH_URL: ${AUTH_INTERNAL_URL:-http://auth:5000}
+      MONGO_URI: ${MONGO_ATLAS_URI}
+      JWT_SECRET: ${JWT_SECRET}
     ports:
-      - "${BACKEND1_PORT:-4000}:4000"
+      - ${BACKEND1_PORT:-4000}:4000
     depends_on:
       - auth
 
   backend2:
     build: ./backend
     environment:
-      NODE_ENV: "${NODE_ENV:-development}"
-      PORT: "${BACKEND2_PORT:-4002}"
-      AUTH_URL: "${AUTH_INTERNAL_URL:-http://auth:5000}"
-      MONGO_URI: "${MONGO_ATLAS_URI}"
-      JWT_SECRET: "${JWT_SECRET}"
+      NODE_ENV: ${NODE_ENV:-development}
+      PORT: ${BACKEND2_PORT:-4002}
+      AUTH_URL: ${AUTH_INTERNAL_URL:-http://auth:5000}
+      MONGO_URI: ${MONGO_ATLAS_URI}
+      JWT_SECRET: ${JWT_SECRET}                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      
     ports:
-      - "${BACKEND2_PORT:-4002}:4002"
+      - ${BACKEND2_PORT:-4002}:4002
     depends_on:
       - auth
 
   frontend1:
-    build: ./frontend
+    build:
+      context: ./frontend
+      args:
+        # Use localhost:* so browser clients outside the Docker network can resolve
+        NEXT_PUBLIC_API_URL: ${FRONTEND1_PUBLIC_BACKEND_URL:-http://localhost:${BACKEND1_PORT:-4000}}
+        NEXT_PUBLIC_SOCKET_URL: ${FRONTEND1_PUBLIC_BACKEND_URL:-http://localhost:${BACKEND1_PORT:-4000}}
+        NEXT_PUBLIC_AUTH_URL: ${FRONTEND_PUBLIC_AUTH_URL:-http://localhost:${AUTH_PORT:-5000}}
     environment:
-      PORT: "${FRONTEND1_PORT:-3000}"
-      BACKEND_URL: "${FRONTEND1_BACKEND_URL:-http://backend1:4000}"
-      AUTH_URL: "${FRONTEND_AUTH_URL:-http://auth:5000}"
+      PORT: ${FRONTEND1_PORT:-3000}
+      NEXT_PUBLIC_API_URL: ${FRONTEND1_PUBLIC_BACKEND_URL:-http://localhost:${BACKEND1_PORT:-4000}}
+      NEXT_PUBLIC_SOCKET_URL: ${FRONTEND1_PUBLIC_BACKEND_URL:-http://localhost:${BACKEND1_PORT:-4000}}
+      NEXT_PUBLIC_AUTH_URL: ${FRONTEND_PUBLIC_AUTH_URL:-http://localhost:${AUTH_PORT:-5000}}
     ports:
-      - "${FRONTEND1_PORT:-3000}:3000"
+      - ${FRONTEND1_PORT:-3000}:3000
+    depends_on:
+      - backend1
+      - auth
 
   frontend2:
-    build: ./frontend
+    build:
+      context: ./frontend
+      args:
+        NEXT_PUBLIC_API_URL: ${FRONTEND2_PUBLIC_BACKEND_URL:-http://localhost:${BACKEND2_PORT:-4002}}
+        NEXT_PUBLIC_SOCKET_URL: ${FRONTEND2_PUBLIC_BACKEND_URL:-http://localhost:${BACKEND2_PORT:-4002}}
+        NEXT_PUBLIC_AUTH_URL: ${FRONTEND_PUBLIC_AUTH_URL:-http://localhost:${AUTH_PORT:-5000}}
     environment:
-      PORT: "${FRONTEND2_PORT:-3001}"
-      BACKEND_URL: "${FRONTEND2_BACKEND_URL:-http://backend2:4002}"
-      AUTH_URL: "${FRONTEND_AUTH_URL:-http://auth:5000}"
+      PORT: ${FRONTEND2_PORT:-3001}
+      NEXT_PUBLIC_API_URL: ${FRONTEND2_PUBLIC_BACKEND_URL:-http://localhost:${BACKEND2_PORT:-4002}}
+      NEXT_PUBLIC_SOCKET_URL: ${FRONTEND2_PUBLIC_BACKEND_URL:-http://localhost:${BACKEND2_PORT:-4002}}
+      NEXT_PUBLIC_AUTH_URL: ${FRONTEND_PUBLIC_AUTH_URL:-http://localhost:${AUTH_PORT:-5000}}
     ports:
-      - "${FRONTEND2_PORT:-3001}:3001"
+      - ${FRONTEND2_PORT:-3001}:3001
+    depends_on:
+      - backend2
+      - auth
 
 volumes:
   mongo_data: {}
