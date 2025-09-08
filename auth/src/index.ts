@@ -1,12 +1,12 @@
 import express from "express";
 import type { Request, Response } from "express";
 import "dotenv/config";  // loads .env automatically
-import authRouter from "@/api/v1/routes/auth.route";
-import userRouter from "@/api/v1/routes/user.route";
-import verifyToken from "@/middleware/verifyToken";
-import User from "@/models/user";
+import authRouter from "@/api/v1/routes/auth.route.js";
+import userRouter from "@/api/v1/routes/user.route.js";
+import verifyToken from "@/middleware/verifyToken.js";
+import User from "@/models/user.js";
 import type { JwtPayload } from "jsonwebtoken";
-import connectDB from "@/config/db";
+import connectDB from "@/config/db.js";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 

@@ -1,6 +1,6 @@
 import express from 'express';
 import type { Request, Response } from "express";
-import { resetPassword, forgotPassword, logout, signup, login } from '@/api/v1/controllers/auth.controller';
+import { resetPassword, forgotPassword, logout, signup, login } from '@/api/v1/controllers/auth.controller.js';
 
 const router = express.Router();
 

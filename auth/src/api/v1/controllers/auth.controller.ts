@@ -1,14 +1,11 @@
-import User from "@/models/user";
+import User from "@/models/user.js";
 import type { Request, Response } from "express";
 import bcrypt from "bcrypt";
-import { signupSchema } from "@/api/v1/schemas/signup.zod";
-import { loginSchema } from "@/api/v1/schemas/login.zod";
-import { forgotPasswordSchema } from "@/api/v1/schemas/forgotPassword.zod";
-import { resetPasswordSchema } from "@/api/v1/schemas/resetPassword.zod";
+import { signupSchema, loginSchema, resetPasswordSchema, forgotPasswordSchema } from "@/api/v1/schemas/index.js";
 import { ZodError } from "zod";
-import generateJWT_Token from "@/utils/generateToken";
+import generateJWT_Token from "@/utils/generateToken.js";
 import crypto from "crypto";
-import { sendEmail } from "@/utils/sendEmail";
+import { sendEmail } from "@/utils/sendEmail.js";
 
 const signup = async (req: Request, res: Response) => {
   try {
