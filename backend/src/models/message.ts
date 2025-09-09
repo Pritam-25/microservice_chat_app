@@ -23,6 +23,7 @@ export interface IMessage extends Document {
   status: MessageStatus
   deliveredAt?: Date
   readAt?: Date
+  deliveredBy?: Types.ObjectId[]
   readBy?: Types.ObjectId[]
   createdAt: Date
   updatedAt: Date
@@ -95,6 +96,7 @@ const MessageSchema = new Schema<IMessage>(
       enum: ["sent", "delivered", "read"],
       default: "sent",
     },
+    deliveredBy: [{ type: Schema.Types.ObjectId, ref: "User" }],
     readBy: [{ type: Schema.Types.ObjectId, ref: "User" }],
     deliveredAt: Date,
     readAt: Date,

@@ -1,8 +1,8 @@
 import {
-getOrCreatePairService,
+  getOrCreatePairService,
   createGroupConversationService,
   getUserConversationsService,
-} from "../services/conversation.service.js"
+} from "./conversation.service.js"
 
 import { sendMessage, updateMessageStatus, fetchMessages } from "./message.service.js"
 

@@ -29,7 +29,7 @@ export function middleware(req: NextRequest) {
 
 export const config = {
   matcher: [
-    "/chat",
+    "/chat/:path*",
     "/login",
     "/signup",
     "/forgot-password",

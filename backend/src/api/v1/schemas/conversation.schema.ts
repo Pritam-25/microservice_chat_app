@@ -31,9 +31,11 @@ export const CreateGroupBodySchema = z
     participants: z.array(zId()).min(2, "At least 2 participants required"),
     admins: z.array(zId()).optional(),
     avatarUrl: z.url().optional(),
-    // Some clients (e.g. form submissions) may send createdBy as an array.
-    // Gracefully unwrap single-element arrays before validating as ObjectId.
-    createdBy: z.preprocess((val) => (Array.isArray(val) ? val[0] : val), zId()),
+    // createdBy: accept a single id or a single-element array; reject multi-element arrays
+    createdBy: z.union([
+      zId(),
+      z.array(zId()).length(1, "createdBy must be a single value").transform(([id]) => id),
+    ]),
   })
   .strict()
   .superRefine((data, ctx) => {

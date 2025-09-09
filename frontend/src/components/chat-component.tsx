@@ -1,5 +1,5 @@
 "use client";
-import { useEffect } from "react";
+import { useEffect, useCallback } from "react";
 import io, { Socket } from "socket.io-client";
 import useAuthStore from "@/zustand/useAuthStore";
 import axios from "axios";
@@ -15,7 +15,7 @@ export default function ChatApp() {
   const { updateUsers } = useUserStore();
   const { setSocket } = useChatStore();
 
-  const getUsers = async () => {
+  const getUsers = useCallback(async () => {
     try {
       const authBase = process.env.NEXT_PUBLIC_AUTH_URL || "http://localhost:5000";
       const response = await axios.get(`${authBase}/api/v1/users`, { withCredentials: true });
@@ -23,62 +23,64 @@ export default function ChatApp() {
     } catch (error) {
       console.error("Error fetching users:", error);
     }
-  }
+  }, [updateUsers])
 
   useEffect(() => {
     if (!authUser) return;
-    (async () => {
-      // Load users first so we can compute `me` reliably for delivery/read acks
-      await getUsers();
-      const socketUrl = process.env.NEXT_PUBLIC_SOCKET_URL || "http://localhost:4000";
-      const socketInstance: Socket = io(socketUrl, {
-        withCredentials: true,
-      });
-      setSocket(socketInstance)
+    let socketInstance: Socket | null = null;
+    let mounted = true;
 
-      // Listen for conversation room broadcasts and self-acks
-      socketInstance.on("new_message", (msg: NewMessage) => {
-        // Use latest store state to avoid stale closures
-        const { upsertMessage } = useChatStore.getState()
-        const { users } = useUserStore.getState()
-        const { activeConversationId } = useChatStore.getState()
+    const init = async () => {
+      try {
+        await getUsers();
+        if (!mounted) return;
+        const socketUrl = process.env.NEXT_PUBLIC_SOCKET_URL || "http://localhost:4000";
+        socketInstance = io(socketUrl, { withCredentials: true });
+        setSocket(socketInstance);
 
-        upsertMessage({
-          id: String(msg._id),
-          conversationId: String(msg.conversation),
-          senderId: String(msg.sender),
-          text: msg.text ?? "",
-          createdAt: msg.createdAt,
-          status: msg.status,
-        })
-
-        // If message is from others, acknowledge delivery/read
-        const me = users.find(u => u.username === authUser)?._id
-        if (me && String(msg.sender) !== String(me)) {
-          socketInstance.emit('message_delivered', { messageId: msg._id })
-          if (activeConversationId && String(activeConversationId) === String(msg.conversation)) {
-            socketInstance.emit('message_read', { messageId: msg._id })
+        const onNewMessage = (msg: NewMessage) => {
+          const { upsertMessage, activeConversationId } = useChatStore.getState();
+          const { users } = useUserStore.getState();
+          upsertMessage({
+            id: String(msg._id),
+            conversationId: String(msg.conversation),
+            senderId: String(msg.sender),
+            text: msg.text ?? "",
+            createdAt: msg.createdAt,
+            status: msg.status,
+          });
+          const me = users.find(u => u.username === authUser)?._id;
+          if (me && String(msg.sender) !== String(me)) {
+            socketInstance?.emit('message_delivered', { messageId: msg._id });
+            if (activeConversationId && String(activeConversationId) === String(msg.conversation)) {
+              socketInstance?.emit('message_read', { messageId: msg._id });
+            }
           }
-        }
+        };
 
-        // Note: previews recompute from store messages; no direct sidebar state changes here
-      })
+        const onMessageStatus = (msg: MessageStatus) => {
+          const { updateMessageStatus } = useChatStore.getState();
+          updateMessageStatus(String(msg._id), msg.status);
+        };
 
-      // Listen for status updates
-      socketInstance.on("message_status", (msg: MessageStatus) => {
-        const { updateMessageStatus } = useChatStore.getState()
-        updateMessageStatus(String(msg._id), msg.status)
-      })
+        socketInstance.on("new_message", onNewMessage);
+        socketInstance.on("message_status", onMessageStatus);
+      } catch (e) {
+        console.error("Socket init failed:", e);
+      }
+    };
+    init();
 
-      return () => {
+    return () => {
+      mounted = false;
+      if (socketInstance) {
         socketInstance.off("new_message");
         socketInstance.off("message_status");
         socketInstance.disconnect();
-        setSocket(null)
-      };
-    })()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [authUser]);
+      }
+      setSocket(null);
+    };
+  }, [authUser, getUsers, setSocket]);
 
   return <ChatLayout />
 }

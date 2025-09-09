@@ -4,11 +4,13 @@ import { createProxyMiddleware } from "http-proxy-middleware";
 const app = express();
 const PORT = process.env.PORT || 8080;
 
+const AUTH_BASE_URL = process.env.AUTH_BASE_URL ?? "http://auth:5000";
+const BACKEND_BASE_URL = process.env.BACKEND_BASE_URL ?? "http://backend:4000";
 const routes = {
-  "/auth": { target: "http://localhost:5000/api/v1", rewrite: { "^/auth": "/auth" } },
-  "/conversations": { target: "http://localhost:4000/api/v1", rewrite: { "^/conversations": "/conversations" } },
-  "/messages": { target: "http://localhost:4000/api/v1", rewrite: { "^/messages": "/messages" } },
-}
+  "/auth": { target: `${AUTH_BASE_URL}/api/v1`, rewrite: { "^/auth": "/auth" } },
+  "/conversations": { target: `${BACKEND_BASE_URL}/api/v1`, rewrite: { "^/conversations": "/conversations" } },
+  "/messages": { target: `${BACKEND_BASE_URL}/api/v1`, rewrite: { "^/messages": "/messages" } },
+};
 
 app.get("/", (req: Request, res: Response) => {
   res.send("🚀 Hello from API Gateway");
@@ -22,8 +24,10 @@ for (const [route, cfg] of Object.entries(routes)) {
       target: cfg.target,
       changeOrigin: true,
       pathRewrite: cfg.rewrite,
-      timeout: 15000,
-      proxyTimeout: 15000,
+      xfwd: true,
+      ws: true,
+      timeout: 60000,
+      proxyTimeout: 60000,
       on: {
         error: (err, _req, res, _target) => {
           // Robust custom error handling per docs (HTTP and WS)

@@ -24,6 +24,7 @@ import { getAxiosErrorMessage } from "@/utils/axiosError"
 import { PasswordInput } from "@/components/ui/passwordInput"
 import useAuthStore from "@/zustand/useAuthStore"
 import { Loader2 } from "lucide-react"
+import Image from "next/image"
 
 
 
@@ -50,7 +51,7 @@ export function SignUpForm({
       const response = await axios.post(`${authBase}/api/v1/auth/signup`, values, { withCredentials: true })
 
       // Handle success
-      toast.success("Successfuly signed up!")
+      toast.success("Successfully signed up!")
       console.log("✅ Signup successful:", response.data)
       setAuthUser(response.data.user.username)
       router.replace("/chat")
@@ -159,10 +160,12 @@ export function SignUpForm({
 
           {/* Right Side Image */}
           <div className="bg-muted relative hidden md:block">
-            <img
+            <Image
               src="/sign-up-avatar.svg"
-              alt="Image"
-              className="absolute inset-0 h-full w-full object-fit dark:brightness-[0.2] dark:grayscale"
+              alt="Sign up illustration"
+              fill
+              priority
+              className="object-contain dark:brightness-[0.2] dark:grayscale"
             />
           </div>
         </CardContent>

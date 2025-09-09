@@ -26,7 +26,7 @@ export default function AuthGuard({ children }: Props) {
         const username: string | undefined = res.data?.user?.username
         if (username) setAuthUser(username)
         setChecking(false)
-      } catch (err) {
+      } catch {
         if (!isMounted) return
         setChecking(false)
         router.replace("/login")

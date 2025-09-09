@@ -32,7 +32,7 @@ interface ConversationModel extends Model<IConversation> {
 const UnreadSchema = new Schema<IUnread>(
   {
     user: { type: Schema.Types.ObjectId, ref: "User", required: true, index: true },
-    count: { type: Number, default: 0 },
+    count: { type: Number, default: 0, min: 0 },
   },
   { _id: false }
 )
@@ -124,7 +124,13 @@ ConversationSchema.statics.getOrCreatePair = async function (
         ],
       },
     },
-    { upsert: true, new: true }
+    {
+      upsert: true,
+      new: true,
+      setDefaultsOnInsert: true,
+      runValidators: true,
+      timestamps: true,
+    }
   )
   return convo
 }

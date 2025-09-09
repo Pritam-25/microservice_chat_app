@@ -22,8 +22,6 @@ app.use(cors({
   credentials: true, // to allow cookies from frontend
 }));
 
-connectDB();
-
 app.use('/api/v1/auth', authRouter);
 app.use('/api/v1/users', userRouter);
 
@@ -48,6 +46,15 @@ app.get("/", (req: Request, res: Response) => {
   res.send("🚀 Hello from Auth Backend");
 });
 
-app.listen(PORT, () => {
-  console.log(`✅ Server running at http://localhost:${PORT}`);
-});
+async function start() {
+  try {
+    await connectDB();
+    app.listen(PORT, () => {
+      console.log(`✅ Server running at http://localhost:${PORT}`);
+    });
+  } catch (err) {
+    console.error("❌ Failed to start server:", err);
+    process.exit(1);
+  }
+}
+start();

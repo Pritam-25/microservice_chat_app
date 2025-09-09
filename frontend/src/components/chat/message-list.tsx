@@ -12,10 +12,24 @@ export default function MessageList({ activeUser }: { activeUser: User | null })
   const { users } = useUserStore()
   const bottomRef = useRef<HTMLDivElement | null>(null)
 
-  const filtered = useMemo(() => {
+  // Support both current store shape and potential future API shape
+  interface MessageShape {
+    id?: string
+    conversationId?: string
+    conversation?: string
+    senderId?: string
+    sender?: string | { _id?: string }
+    receiverId?: string
+    text?: string
+    createdAt?: string
+    status?: 'sent' | 'delivered' | 'read'
+  }
+
+  const filtered = useMemo<MessageShape[]>(() => {
     if (!activeConversationId) return []
     return messages
-      .filter((m) => m.conversationId === activeConversationId)
+      // Support future shape where backend might send 'conversation' & 'sender'
+      .filter((m: MessageShape) => (m.conversationId || m.conversation) === activeConversationId)
       .slice()
       .sort((a, b) => {
         const at = a.createdAt ? Date.parse(a.createdAt) : 0
@@ -53,13 +67,15 @@ export default function MessageList({ activeUser }: { activeUser: User | null })
     <div className="h-full overflow-y-auto bg-background">
       <div className="w-full lg:max-w-[80%] p-4 mx-auto space-y-2">
         {filtered.map((m, i) => {
-          const meId = users.find(u => u.username === authUser)?._id
-          const mine = meId ? (m.senderId === meId) : false
+          // authUser is a username (string) in the store; derive id from users list
+          const meId = authUser ? users.find(u => u.username === authUser)?._id : undefined
+          const senderId = m.senderId || (typeof m.sender === 'string' ? m.sender : m.sender?._id)
+          const mine = meId ? (senderId === meId) : false
           const isGroupMode = !activeUser && !!activeConversationId
-          const senderUser = users.find(u => u._id === m.senderId)
-          const senderName = mine ? "You" : (senderUser?.username || (m.senderId?.slice?.(0, 6) ?? "Unknown"))
+          const senderUser = users.find(u => u._id === senderId)
+          const senderName = mine ? "You" : (senderUser?.username || (senderId?.slice?.(0, 6) ?? "Unknown"))
           return (
-            <div key={m.id ?? `${m.senderId}-${m.createdAt}-${i}`} className={`flex w-full ${mine ? 'justify-end' : 'justify-start'}`}>
+            <div key={m.id ?? `${senderId}-${m.createdAt}-${i}`} className={`flex w-full ${mine ? 'justify-end' : 'justify-start'}`}>
               <div className={`max-w-[70%] rounded-lg flex gap-4 px-3 py-2 text-base ${mine ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}>
                 <div className="flex-1">
                   {isGroupMode && (

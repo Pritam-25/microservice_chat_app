@@ -4,7 +4,12 @@ import { Conversation } from "@/models/conversation.js";
 import { createMessage, getMessagesByConversation, updateMessageStatusRepo } from "@/api/v1/repositories/index.js";
 
 export const sendMessage = async (data: IMessageInput) => {
-  // Convert string ObjectId fields to Types.ObjectId
+  // Validate ObjectId strings before construction to avoid runtime errors
+  if (!Types.ObjectId.isValid(data.conversation)) throw new Error("Invalid conversation id")
+  if (!Types.ObjectId.isValid(data.sender)) throw new Error("Invalid sender id")
+  if (data.receiver && !Types.ObjectId.isValid(data.receiver)) throw new Error("Invalid receiver id")
+
+  // Safe conversion after validation
   const messageData = {
     ...data,
     conversation: new Types.ObjectId(data.conversation),
@@ -50,6 +55,7 @@ export const updateMessageStatus = async (
   const updated = await updateMessageStatusRepo(messageId, status, userId)
   // If user read a message, reset unread counter for that user in the conversation
   if (updated && status === "read" && userId) {
+    if (!Types.ObjectId.isValid(userId)) return updated
     await Conversation.updateOne(
       { _id: updated.conversation, "unread.user": new Types.ObjectId(userId) },
       { $set: { "unread.$.count": 0 } }

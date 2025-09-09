@@ -9,7 +9,7 @@ import ConversationRouter from "@/api/v1/routes/conversation.route.js";
 import messageRoutes from "@/api/v1/routes/message.route.js";
 import connectDB from "@/config/db.js";
 import { registerMessageHandlers, registerSocketAuth, getOnlineUserIds } from "@/sockets/index.js";
-import verifyAuth from "@/middleware/verifyAuth.js";
+import { verifyAuth } from "@/middleware/verifyAuth.js";
 
 const PORT = process.env.PORT || 4000;
 
@@ -28,7 +28,6 @@ app.use(cookieParser());
 app.use("/api/v1/conversations", ConversationRouter);
 app.use("/api/v1/messages", messageRoutes);
 
-connectDB();
 
 const server = createServer(app);
 const io = new Server(server, {
@@ -61,6 +60,12 @@ io.on("connection", (socket) => {
   registerMessageHandlers(io, socket);
 });
 
-server.listen(PORT, () => {
-  console.log(`✅ Server running at http://localhost:${PORT}`);
+
+connectDB().then(() => {
+  server.listen(PORT, () => {
+    console.log(`✅ Server running at http://localhost:${PORT}`);
+  });
+}).catch((err) => {
+  console.error("❌ Failed to connect to DB:", err);
+  process.exit(1);
 });
