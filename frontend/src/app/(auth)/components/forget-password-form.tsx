@@ -19,6 +19,7 @@ import axios from "axios"
 import { toast } from "sonner"
 import { ForgotPasswordInput, forgotPasswordSchema } from "@/lib/schemas"
 import { getAxiosErrorMessage } from "@/utils/axiosError"
+import Image from "next/image"
 
 
 export function ForgotPasswordForm({
@@ -36,7 +37,7 @@ export function ForgotPasswordForm({
     try {
       const authBase = process.env.NEXT_PUBLIC_AUTH_URL || "http://localhost:5000"
       const response = await axios.post(
-        `${authBase}/auth/v1/forgot-password`,
+        `${authBase}/api/v1/auth/forgot-password`,
         values
       )
 
@@ -106,10 +107,12 @@ export function ForgotPasswordForm({
 
           {/* Right Side Image */}
           <div className="bg-muted relative hidden md:block">
-            <img
+            <Image
               src="/forgot-password-avatar.svg"
-              alt="Forgot Password Image"
-              className="absolute inset-0 h-full w-full object-fit dark:brightness-[0.2] dark:grayscale"
+              alt="Forgot password illustration"
+              fill
+              priority
+              className="object-contain dark:brightness-[0.2] dark:grayscale"
             />
           </div>
         </CardContent>

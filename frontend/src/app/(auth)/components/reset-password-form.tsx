@@ -3,9 +3,7 @@
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
 import { useForm } from "react-hook-form"
-import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
 import axios from "axios"
 import { toast } from "sonner"
@@ -22,6 +20,7 @@ import { useParams, useRouter } from "next/navigation"
 import { getAxiosErrorMessage } from "@/utils/axiosError"
 import { ResetPasswordInput, resetPasswordSchema } from "@/lib/schemas"
 import { PasswordInput } from "@/components/ui/passwordInput"
+import Image from "next/image"
 
 
 export function ResetPasswordForm({
@@ -48,7 +47,7 @@ export function ResetPasswordForm({
 
       const authBase = process.env.NEXT_PUBLIC_AUTH_URL || "http://localhost:5000"
       const res = await axios.post(
-        `${authBase}/auth/v1/reset-password/${token}`,
+        `${authBase}/api/v1/auth/reset-password/${token}`,
         {
           newPassword: values.newPassword,
           confirmNewPassword: values.confirmNewPassword,
@@ -124,10 +123,12 @@ export function ResetPasswordForm({
 
           {/* Right Side Image */}
           <div className="bg-muted relative hidden md:block">
-            <img
+            <Image
               src="/reset-password-avatar.svg"
-              alt="Reset Password"
-              className="absolute inset-0 h-full w-full object-cover dark:brightness-[0.2] dark:grayscale"
+              alt="Reset password illustration"
+              fill
+              priority
+              className="object-contain dark:brightness-[0.2] dark:grayscale"
             />
           </div>
         </CardContent>

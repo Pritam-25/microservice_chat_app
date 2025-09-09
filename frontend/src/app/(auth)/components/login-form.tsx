@@ -23,6 +23,7 @@ import { getAxiosErrorMessage } from "@/utils/axiosError"
 import { PasswordInput } from "@/components/ui/passwordInput"
 import useAuthStore from "@/zustand/useAuthStore"
 import { Loader2 } from "lucide-react"
+import Image from "next/image"
 
 
 export function LoginForm({
@@ -144,10 +145,12 @@ export function LoginForm({
 
           {/* Right Side Image */}
           <div className="bg-muted relative hidden md:block">
-            <img
+            <Image
               src="/sign-in-avatar.svg"
-              alt="Image"
-              className="absolute inset-0 h-full w-full object-fit dark:brightness-[0.2] dark:grayscale"
+              alt="Sign in illustration"
+              fill
+              priority
+              className="object-contain dark:brightness-[0.2] dark:grayscale"
             />
           </div>
         </CardContent>

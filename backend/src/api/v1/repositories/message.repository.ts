@@ -1,9 +1,15 @@
 import { IMessage, Message } from "@/models/message.js";
-import type { UpdateQuery } from "mongoose";
+import { Types } from "mongoose";
+import type { UpdateQuery, FilterQuery } from "mongoose";
 
+
+type CreateMessageInput = Pick<IMessage, "conversation" | "sender" | "receiver" | "type" | "text" | "attachments">;
 
 export const createMessage = async (data: Partial<IMessage>) => {
-  const msg = new Message(data);
+  // Whitelist allowed client-provided fields to avoid mass assignment
+  const { conversation, sender, receiver, type, text, attachments } = data as CreateMessageInput;
+  const payload: CreateMessageInput = { conversation, sender, receiver, type, text, attachments };
+  const msg = new Message(payload);
   return await msg.save();
 }
 
@@ -17,13 +23,24 @@ export const updateMessageStatusRepo = async (
   status: "delivered" | "read",
   userId?: string
 ) => {
+  const now = new Date()
+  const filter: FilterQuery<IMessage> = { _id: messageId }
   const update: UpdateQuery<IMessage> = { $set: { status } }
+
   if (status === "delivered") {
-    update.$set.deliveredAt = new Date()
+    // Prevent downgrading a message already marked as read
+    filter.status = { $ne: "read" }
+    update.$set.deliveredAt = now
+    if (userId && Types.ObjectId.isValid(userId)) {
+      update.$addToSet = { ...(update.$addToSet || {}), deliveredBy: new Types.ObjectId(userId) }
+    }
+  } else { // status === 'read'
+    // Mark read implies delivered
+    update.$set.readAt = now
+    update.$set.deliveredAt = now
+    if (userId && Types.ObjectId.isValid(userId)) {
+      update.$addToSet = { readBy: new Types.ObjectId(userId) }
+    }
   }
-  if (status === "read") {
-    update.$set.readAt = new Date()
-    if (userId) update.$addToSet = { readBy: userId }
-  }
-  return await Message.findByIdAndUpdate(messageId, update, { new: true, runValidators: true })
+  return await Message.findOneAndUpdate(filter, update, { new: true, runValidators: true })
 }

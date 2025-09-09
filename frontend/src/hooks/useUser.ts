@@ -1,7 +1,8 @@
+"use client"
 import useAuthStore from "@/zustand/useAuthStore"
 
 export const useUser = () => {
-  const { authUser } = useAuthStore()
+  const authUser = useAuthStore((s) => s.authUser)
   return { username: authUser }
 }
 

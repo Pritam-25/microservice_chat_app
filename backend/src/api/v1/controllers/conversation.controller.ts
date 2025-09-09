@@ -70,15 +70,17 @@ export async function createGroupConversation(req: Request, res: Response) {
     // admins default to [createdBy] and ensure creator present even if admins provided
     const mergedAdmins = admins ? [...admins, createdBy] : [createdBy]
     const finalAdmins = Array.from(new Set(mergedAdmins))
+    // Ensure every admin is also a participant (defense in depth)
+    const finalParticipants = Array.from(new Set([...ensureParticipants, ...finalAdmins]))
 
     // Authorization: requester must be the creator
     if (!req.authUserId || String(req.authUserId) !== String(createdBy)) {
       return res.status(403).json({ message: "Forbidden: createdBy must match authenticated user" })
     }
 
-    console.log("🔹 createGroupConversation called with:", { name, participants: ensureParticipants, admins: finalAdmins, avatarUrl, createdBy })
+    console.log("🔹 createGroupConversation called with:", { name, participants: finalParticipants, admins: finalAdmins, avatarUrl, createdBy })
 
-    const convo = await createGroupConversationService(name, ensureParticipants, finalAdmins, avatarUrl)
+    const convo = await createGroupConversationService(name, finalParticipants, finalAdmins, avatarUrl)
     console.log("✅ Group conversation created:", convo)
 
     res.status(201).json({

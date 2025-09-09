@@ -1,5 +1,5 @@
 "use client"
-import { useState } from "react"
+import { useState, type FormEvent } from "react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import type { User } from "@/zustand/useUserStore"
@@ -11,7 +11,7 @@ export default function MessageInput({ activeUser }: { activeUser: User | null }
   const { authUser } = useAuthStore()
   const { socket, activeConversationId } = useChatStore()
 
-  const send = (e: React.FormEvent) => {
+  const send = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     if (!value.trim() || !authUser || !activeConversationId) return
 
@@ -21,8 +21,8 @@ export default function MessageInput({ activeUser }: { activeUser: User | null }
         type: 'text',
         text: value,
       })
+      setValue("")
     }
-    setValue("")
   }
 
   return (

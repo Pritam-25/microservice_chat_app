@@ -87,12 +87,12 @@ export default function ChatLayout() {
           }
         })
         setPreviews(mapped)
-      } catch (e) {
-        // ignore for now
+      } catch {
+        // silently ignore preview load errors
       }
     }
     run()
-  }, [authUser, users, activeUser, conversationsVersion])
+  }, [authUser, users, activeUser, conversationsVersion, apiBase])
 
   // Track last requested pair to avoid duplicate calls
   const lastPairKeyRef = useRef<string | null>(null)
@@ -166,7 +166,7 @@ export default function ChatLayout() {
       // leave previous room when switching chats
       if (socket && prevConversationId) socket.emit("leave_conversation", prevConversationId)
     }
-  }, [activeUser, users, authUser, socket, setActiveConversationId, setMessages])
+  }, [activeUser, users, authUser, socket, setActiveConversationId, setMessages, apiBase])
 
   // Update previews by recomputing from the entire messages array to avoid double-counting
   useEffect(() => {

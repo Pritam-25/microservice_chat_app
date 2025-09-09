@@ -1,7 +1,7 @@
 import type { Request, Response } from "express";
 import { fetchMessages, sendMessage } from "@/api/v1/services/index.js";
 import { Conversation } from "@/models/conversation.js";
-import z, { ZodError } from "zod";
+import { z, ZodError } from "zod";
 import { MessageSchema } from "@/api/v1/schemas/index.js";
 import { zId } from "@/api/v1/schemas/index.js";
 import { Types } from "mongoose";
@@ -18,11 +18,7 @@ export const createMessage = async (req: Request, res: Response) => {
     }
     // Always trust the authenticated user as the sender, ignore client-provided sender
     const parsed = MessageSchema.parse({ ...req.body, conversation: req.params.conversationId, sender: req.authUserId });
-    // Convert string ObjectId fields to Mongoose ObjectId
-    parsed.conversation = new (require('mongoose').Types.ObjectId)(parsed.conversation);
-    parsed.sender = new (require('mongoose').Types.ObjectId)(parsed.sender);
-    if (parsed.receiver) parsed.receiver = new (require('mongoose').Types.ObjectId)(parsed.receiver);
-    // Ensure the authenticated user belongs to the conversation as a final guard
+    // Keep IDs as strings; data layer can cast as needed. Membership guard:
     const convo = await Conversation.findById(parsed.conversation).select("participants").lean();
     if (!convo || !convo.participants.some((p: any) => String(p) === String(req.authUserId))) {
       return res.status(403).json({ message: "Forbidden: not a participant" });

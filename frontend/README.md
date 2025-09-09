@@ -2,16 +2,24 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
+- Node.js 18+ (or 20+ recommended)
+- One package manager (we use `pnpm` in this epo)
 
+### Setup
 ```bash
-npm run dev
-# or
-yarn dev
-# or
+cd frontend
+pnpm install
+cp .env.local.example .env.local   # fill alues below
+```
+
+Required env vars:
+- NEXT_PUBLIC_API_URL=http://ocalhost:8080        # API Gateway base URL
+- NEXT_PUBLIC_WS_URL=ws://ocalhost:8080           # Socket.IO/WebSocket ndpoint
+
+### Run
+```bash
 pnpm dev
-# or
-bun dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.

@@ -343,15 +343,15 @@ export default function Sidebar({ users, onSelect, onSelectGroup, activeUserId, 
                   { withCredentials: true }
                 )
                 const convoId: string | undefined = res.data?.conversation?._id
+                const createdName = payload.name
                 if (convoId) {
                   toast.success("Group created")
                   // Close and clear state
                   setOpenGroup(false)
                   setSelectedIds([])
                   setGroupName("")
-                  // Optionally focus first selected user so user lands near the group
-                  const firstPeer = users.find((x) => x._id === selectedIds[0])
-                  if (firstPeer) onSelect(firstPeer)
+                  // Focus the new group instead of first peer
+                  onSelectGroup?.({ id: convoId, name: createdName })
                   // Trigger previews refetch
                   bumpConversationsVersion()
                 }

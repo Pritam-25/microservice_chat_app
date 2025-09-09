@@ -90,20 +90,18 @@ export const registerMessageHandlers = (io: Server, socket: Socket) => {
     try {
       const userId = (socket as any).data?.userId as string | undefined
       if (!userId || !messageId) return socket.emit("error", { error: "Unauthorized or invalid payload" })
+      // Validate membership BEFORE mutation
+      const meta = await Message.findById(messageId).select("conversation")
+      if (!meta) return socket.emit("error", { error: "Message not found" })
+      const convo = await Conversation.findById(meta.conversation).select("participants")
+      const isMember = !!(convo && convo.participants.some((p) => String(p) === String(userId)))
+      if (!isMember) return socket.emit("error", { error: "Forbidden" })
       const updated = await messageService.updateMessageStatus(messageId, "delivered", userId)
       if (!updated) return
-      // Membership already checked by assertMembershipOrEmit for user existence; we can still ensure membership on convo:
-      const convo = await Conversation.findById(updated.conversation).select("participants")
-      const isMember = convo && convo.participants.some((p) => String(p) === String(userId))
-      if (!isMember) return
-      const convId = updated.conversation.toString()
+      const convId = String(updated.conversation)
       io.to(convId).emit("message_status", updated)
-      // Also notify participants via user rooms so status reaches them even if not in the convo room
-      const convo2 = await Conversation.findById(updated.conversation).select("participants")
-      if (convo2) {
-        for (const p of convo2.participants) {
-          io.to(`user:${String(p)}`).emit("message_status", updated)
-        }
+      for (const p of (convo?.participants ?? [])) {
+        io.to(`user:${String(p)}`).emit("message_status", updated)
       }
       console.log("✅ Delivered:", messageId)
     } catch (err) {
@@ -116,18 +114,17 @@ export const registerMessageHandlers = (io: Server, socket: Socket) => {
     try {
       const userId = (socket as any).data?.userId as string | undefined
       if (!userId || !messageId) return socket.emit("error", { error: "Unauthorized or invalid payload" })
+      const meta = await Message.findById(messageId).select("conversation")
+      if (!meta) return socket.emit("error", { error: "Message not found" })
+      const convo = await Conversation.findById(meta.conversation).select("participants")
+      const isMember = !!(convo && convo.participants.some((p) => String(p) === String(userId)))
+      if (!isMember) return socket.emit("error", { error: "Forbidden" })
       const updated = await messageService.updateMessageStatus(messageId, "read", userId)
       if (!updated) return
-      const convo = await Conversation.findById(updated.conversation).select("participants")
-      const isMember = convo && convo.participants.some((p) => String(p) === String(userId))
-      if (!isMember) return
-      const convId = updated.conversation.toString()
+      const convId = String(updated.conversation)
       io.to(convId).emit("message_status", updated)
-      const convo2 = await Conversation.findById(updated.conversation).select("participants")
-      if (convo2) {
-        for (const p of convo2.participants) {
-          io.to(`user:${String(p)}`).emit("message_status", updated)
-        }
+      for (const p of (convo?.participants ?? [])) {
+        io.to(`user:${String(p)}`).emit("message_status", updated)
       }
       console.log("👀 Read:", messageId)
     } catch (err) {

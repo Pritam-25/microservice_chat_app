@@ -5,10 +5,11 @@ import { Conversation } from "@/models/conversation.js"
 // Ensures the authenticated user is a participant of the conversation
 // For GET /messages/:conversationId -> use req.params.conversationId
 // For POST /messages -> use req.body.conversation
-export default async function ensureParticipant(req: Request, res: Response, next: NextFunction) {
+// Derive conversationId only from route params (req.params.conversationId)
+export default async function ensureParticipant(req: Request & { authUserId?: string }, res: Response, next: NextFunction) {
   try {
     const userId = req.authUserId
-    const conversationId = (req.params?.conversationId ?? req.body?.conversation)?.toString()
+    const conversationId = req.params?.conversationId?.toString()
 
     if (!userId) {
       return res.status(401).json({ message: "Unauthorized: No authenticated user" })
@@ -25,7 +26,7 @@ export default async function ensureParticipant(req: Request, res: Response, nex
 
     const isParticipant = convo.participants.some((p) => String(p) === String(userId))
     if (!isParticipant) {
-      return res.status(403).json({ message: "Forbidden: You are not a participant of this conversation" })
+      return res.status(404).json({ message: "Conversation not found" })
     }
 
     return next()

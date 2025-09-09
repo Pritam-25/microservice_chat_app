@@ -24,23 +24,24 @@ export async function createGroupConversationService(
   admins: string[],
   avatarUrl?: string
 ) {
-  // Build deterministic gKey: lowercase trimmed name + sorted participant ids
+  // Normalize & merge: admins must be members before computing deterministic gKey
   const normalizedName = name.trim().toLowerCase()
-  const uniqueParticipants = Array.from(new Set(participants))
-  const sortedParticipants = uniqueParticipants.sort()
+  const uniqueParticipants = Array.from(new Set(participants.map(String)))
+  const uniqueAdmins = Array.from(new Set(admins.map(String)))
+  const finalParticipants = Array.from(new Set([...uniqueParticipants, ...uniqueAdmins]))
+  const sortedParticipants = [...finalParticipants].sort()
   const gKey = `${normalizedName}:${sortedParticipants.join(":")}`
 
-  // Check for duplicate group with same name and participants
+  // Prevent duplicate group (same normalized name + participant set)
   const existing = await findGroupByGKeyRepo(gKey)
   if (existing) {
     throw new Error("A group with the same name and participants already exists")
   }
 
-  const uniqueAdmins = Array.from(new Set(admins))
   const convo = await createGroupRepo({
     name,
     gKey,
-    participants: uniqueParticipants.map((id) => new Types.ObjectId(id)),
+    participants: finalParticipants.map((id) => new Types.ObjectId(id)),
     admins: uniqueAdmins.map((id) => new Types.ObjectId(id)),
     avatarUrl,
   })
