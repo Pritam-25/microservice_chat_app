@@ -53,13 +53,13 @@ export default function ChatLayout() {
   }, [activeUser, activeConversationId, previews])
 
   // Exclude self from list if present
-  const filteredUsers = useMemo(() => users.filter(u => u.username !== authUser), [users, authUser])
+  const filteredUsers = useMemo(() => users.filter(u => u.username !== authUser?.username), [users, authUser])
 
   // Load conversation previews once users are available
   useEffect(() => {
     const run = async () => {
       if (!authUser || users.length === 0) return
-      const me = users.find(u => u.username === authUser)
+      const me = users.find(u => u.username === authUser.username)
       if (!me) return
       try {
         const res = await axios.get(`${apiBase}/api/v1/conversations/${me._id}`, { withCredentials: true })
@@ -104,7 +104,7 @@ export default function ChatLayout() {
       if (!activeUser) return
       try {
         // derive current user's id from list
-        const me = users.find(u => u.username === authUser)
+        const me = users.find(u => u.username === authUser?.username)
         if (!me) return
         const pairKey = `${me._id}:${activeUser._id}`
         if (lastPairKeyRef.current === pairKey) {
@@ -173,7 +173,7 @@ export default function ChatLayout() {
     const unsub = useChatStore.subscribe((state) => {
       const msgs = state.messages
       if (!authUser) return
-      const me = users.find(u => u.username === authUser)
+      const me = users.find(u => u.username === authUser?.username)
       if (!me) return
       // Build per-conversation aggregates: last message and unread count
       const activeId = useChatStore.getState().activeConversationId
@@ -247,6 +247,16 @@ export default function ChatLayout() {
     return () => { unsub() }
   }, [])
 
+  // Ensure we join / leave conversation socket room when the activeConversationId changes (covers manual changes)
+  useEffect(() => {
+    if (!socket) return
+    const current = activeConversationId
+    if (current) socket.emit('join_conversation', current)
+    return () => {
+      if (current) socket.emit('leave_conversation', current)
+    }
+  }, [activeConversationId, socket])
+
   return (
     <div className="h-[100svh] w-full flex">
       {/* Left Sidebar */}
@@ -272,7 +282,7 @@ export default function ChatLayout() {
               if (list.length >= 2 && new Date(list[0].createdAt || 0) > new Date(list[1].createdAt || 0)) {
                 list = list.slice().reverse()
               }
-              const me = users.find(u => u.username === authUser)
+              const me = users.find(u => u.username === authUser?.username)
               const mapped = list.map((m: ApiMessage) => ({
                 id: String(m._id),
                 conversationId: String(m.conversation),

@@ -59,7 +59,7 @@ export default function Sidebar({ users, onSelect, onSelectGroup, activeUserId, 
   const { authUser } = useAuthStore()
   const { users: allUsers } = useUserStore()
   const { bumpConversationsVersion } = useChatStore()
-  const meId = useMemo(() => allUsers.find(u => u.username === authUser)?._id, [allUsers, authUser])
+  const meId = useMemo(() => allUsers.find(u => u.username === authUser?.username)?._id, [allUsers, authUser])
   // Visible previews filtered by search (matches group name or peer username)
   const visiblePreviews = useMemo(() => {
     const s = q.trim().toLowerCase()
@@ -104,7 +104,7 @@ export default function Sidebar({ users, onSelect, onSelectGroup, activeUserId, 
                     await axios.post(`${authBase}/api/v1/auth/logout`, {}, { withCredentials: true })
                     // Basic client sign-out: clear authUser; in a full app, also redirect to login
                     // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-                    authUser && console.log("Logged out:", authUser)
+                    authUser && console.log("Logged out:", authUser.username)
                     window.location.href = "/login"
                   } catch (e) {
                     console.error("Logout failed", e)
@@ -203,8 +203,11 @@ export default function Sidebar({ users, onSelect, onSelectGroup, activeUserId, 
                   )}
                 >
                   <div className="flex items-center gap-3">
-                    <div className="size-10 rounded-full border-2 shrink-0 flex items-center justify-center bg-blue-50 text-blue-700">
+                    <div className="relative size-10 rounded-full border-2 shrink-0 flex items-center justify-center bg-blue-50 text-blue-700">
                       <UserIcon className="size-5" />
+                      {u.online && (
+                        <span className="absolute -bottom-0.5 -right-0.5 block size-3 rounded-full ring-2 ring-white bg-green-500" aria-label="Online" />
+                      )}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between gap-2">
@@ -245,7 +248,9 @@ export default function Sidebar({ users, onSelect, onSelectGroup, activeUserId, 
                   onSelect(u)
                 }}
               >
-                <div className="size-8 rounded-full bg-blue-100 border-2 mr-2" />
+                <div className="relative size-8 rounded-full bg-blue-100 border-2 mr-2">
+                  {u.online && <span className="absolute -bottom-0.5 -right-0.5 block size-2.5 rounded-full ring-2 ring-white bg-green-500" aria-label="Online" />}
+                </div>
                 <span className="truncate">{u.username}</span>
               </CommandItem>
             ))}
@@ -328,7 +333,7 @@ export default function Sidebar({ users, onSelect, onSelectGroup, activeUserId, 
               try {
                 setIsCreating(true)
                 // Find current user id (from global store to ensure we have the auth user record)
-                const me = allUsers.find((u) => u.username === authUser)
+                const me = allUsers.find((u) => u.username === authUser?.username)
                 if (!me) throw new Error("Current user not found")
                 const participants = Array.from(new Set([...selectedIds, me._id]))
                 const payload = {

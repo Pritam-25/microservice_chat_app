@@ -24,7 +24,7 @@ export default function AuthGuard({ children }: Props) {
         })
         if (!isMounted) return
         const username: string | undefined = res.data?.user?.username
-        if (username) setAuthUser(username)
+        if (username) setAuthUser({ username })
         setChecking(false)
       } catch {
         if (!isMounted) return

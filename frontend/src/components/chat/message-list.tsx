@@ -68,7 +68,7 @@ export default function MessageList({ activeUser }: { activeUser: User | null })
       <div className="w-full lg:max-w-[80%] p-4 mx-auto space-y-2">
         {filtered.map((m, i) => {
           // authUser is a username (string) in the store; derive id from users list
-          const meId = authUser ? users.find(u => u.username === authUser)?._id : undefined
+          const meId = authUser ? users.find(u => u.username === authUser.username)?._id : undefined
           const senderId = m.senderId || (typeof m.sender === 'string' ? m.sender : m.sender?._id)
           const mine = meId ? (senderId === meId) : false
           const isGroupMode = !activeUser && !!activeConversationId
