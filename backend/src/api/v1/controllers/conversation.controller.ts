@@ -67,7 +67,7 @@ export async function createGroupConversation(req: Request, res: Response) {
       ? baseParticipants
       : [...baseParticipants, createdBy]
 
-    // admins default to [createdBy] and ensure creator present even if admins provided
+    // Ensure creator is admin
     const mergedAdmins = admins ? [...admins, createdBy] : [createdBy]
     const finalAdmins = Array.from(new Set(mergedAdmins))
     // Ensure every admin is also a participant (defense in depth)
@@ -80,7 +80,13 @@ export async function createGroupConversation(req: Request, res: Response) {
 
     console.log("🔹 createGroupConversation called with:", { name, participants: finalParticipants, admins: finalAdmins, avatarUrl, createdBy })
 
-    const convo = await createGroupConversationService(name, finalParticipants, finalAdmins, avatarUrl)
+    const convo = await createGroupConversationService(
+      name,
+      finalParticipants,
+      finalAdmins,
+      avatarUrl
+    )
+    
     console.log("✅ Group conversation created:", convo)
 
     res.status(201).json({

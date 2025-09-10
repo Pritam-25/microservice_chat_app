@@ -86,7 +86,8 @@ export default function ChatApp() {
         // Initial presence hydration (fetch once after connect)
         try {
           const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
-          const res = await fetch(`${apiBase}/online-users`, { credentials: 'include' });
+          const headers: HeadersInit = authUser?.token ? { Authorization: `Bearer ${authUser.token}` } : {};
+          const res = await fetch(`${apiBase}/online-users`, { credentials: 'include', headers });
           const data = await res.json() as { users?: string[] };
           if (Array.isArray(data.users)) {
             const { users } = useUserStore.getState();

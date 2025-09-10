@@ -12,6 +12,7 @@ import { registerMessageHandlers, registerSocketAuth, getOnlineUserIds } from "@
 import { getGlobalOnlineUsers, stopPresenceLoops } from "@/sockets/presence.js";
 import { verifyAuth } from "@/middleware/verifyAuth.js";
 import { initSubscriptions, CHANNELS, shutdownRedis } from "@/redis/messagePubSub.js";
+import { Conversation } from "@/models/conversation.js";
 
 const PORT = process.env.PORT || 4000;
 
@@ -66,31 +67,70 @@ io.on("connection", (socket) => {
 
 // Initialize Redis pub/sub subscriptions (no-op if Redis not configured)
 initSubscriptions({
-  [CHANNELS.NEW_MESSAGE]: (msg: any) => {
+  [CHANNELS.NEW_MESSAGE]: async (msg: any) => {
+    const inst = process.env.INSTANCE_NAME || 'instance'
     try {
       const convId = String(msg?.conversation || '')
-      if (convId) {
-        // Emit to each participant individually (user rooms) + conversation room
-        if (Array.isArray(msg?.participants)) {
-          for (const p of msg.participants) {
-            if (String(p) === String(msg?.sender)) continue
-            io.to(`user:${String(p)}`).emit('new_message', msg)
-          }
+      if (!convId) return
+
+      let participants: string[] = Array.isArray(msg?.participants) ? msg.participants.map((p: any) => String(p)) : []
+
+      // If participants missing, fetch from DB as fallback
+      if (!participants.length) {
+        try {
+          const convo = await Conversation.findById(convId).select('participants')
+          if (convo) participants = (convo as any).participants.map((p: any) => String(p))
+        } catch (e) {
+          console.warn(`⚠️ [${inst}] Failed to fetch participants for ${convId}:`, e)
         }
-        io.to(convId).emit('new_message', msg)
       }
-    } catch (e) { console.error('❌ Redis fan-out new_message error', e) }
+
+      const sender = String(msg?.sender || '')
+      const targets: string[] = []
+
+      // Emit to each participant's user room (excluding sender)
+      for (const p of participants) {
+        if (p === sender) continue
+        targets.push(`user:${p}`)
+        io.to(`user:${p}`).emit('new_message', msg)
+      }
+
+      // Also emit to conversation room
+      io.to(convId).emit('new_message', msg)
+
+      console.log(`📡 [${inst}] fan-out new_message ${msg?._id || ''} convo=${convId} participants=${participants.length} userRooms=${targets.join(',')}`)
+    } catch (e) { console.error(`❌ [${inst}] Redis fan-out new_message error`, e) }
   },
-  [CHANNELS.MESSAGE_STATUS]: (m: any) => {
+  [CHANNELS.MESSAGE_STATUS]: async (m: any) => {
+    const inst = process.env.INSTANCE_NAME || 'instance'
     try {
       const convId = String(m?.conversation || '')
-      if (convId) {
-        io.to(convId).emit('message_status', m)
-        if (Array.isArray(m?.participants)) {
-          for (const p of m.participants) io.to(`user:${String(p)}`).emit('message_status', m)
+      if (!convId) return
+
+      let participants: string[] = Array.isArray(m?.participants) ? m.participants.map((p: any) => String(p)) : []
+
+      // If participants missing, fetch from DB as fallback
+      if (!participants.length) {
+        try {
+          const convo = await Conversation.findById(convId).select('participants')
+          if (convo) participants = (convo as any).participants.map((p: any) => String(p))
+        } catch (e) {
+          console.warn(`⚠️ [${inst}] Failed to fetch participants for status update ${convId}:`, e)
         }
       }
-    } catch (e) { console.error('❌ Redis fan-out message_status error', e) }
+
+      // Emit to conversation room
+      io.to(convId).emit('message_status', m)
+
+      // Emit to each participant's user room
+      const targets: string[] = []
+      for (const p of participants) {
+        targets.push(`user:${p}`)
+        io.to(`user:${p}`).emit('message_status', m)
+      }
+
+      console.log(`📡 [${inst}] fan-out message_status ${m?._id || ''} status=${m?.status || ''} convo=${convId} userRooms=${targets.join(',')}`)
+    } catch (e) { console.error(`❌ [${inst}] Redis fan-out message_status error`, e) }
   },
   [CHANNELS.PRESENCE]: (p: any) => {
     try {
@@ -111,6 +151,7 @@ const shutdown = async () => {
   console.log('\n🛑 Shutting down...')
   try { await shutdownRedis() } catch { }
   try { stopPresenceLoops() } catch { }
+  try { await new Promise<void>((resolve) => io.close(() => resolve())) } catch { }
   server.close(() => process.exit(0))
   setTimeout(() => process.exit(0), 5000)
 }

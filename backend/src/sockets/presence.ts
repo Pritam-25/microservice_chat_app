@@ -24,14 +24,16 @@ export async function addOnlineUser(userId: string, socketId: string) {
 
   // Increment distributed counter
   try {
-    const newCount = await redis.incr(COUNTER_KEY(userId))
-    if (newCount === 1) {
-      // first active socket globally -> mark online
-      await redis.sadd(ONLINE_SET_KEY, userId)
+    const script = `
+      local c = redis.call('INCR', KEYS[1])
+      if c == 1 then redis.call('SADD', KEYS[2], ARGV[1]) end
+      redis.call('SET', KEYS[3], '1', 'EX', ARGV[2])
+      return c
+    `
+    const newCount = await redis.eval(script, 3, COUNTER_KEY(userId), ONLINE_SET_KEY, HB_KEY(userId), userId, String(HEARTBEAT_TTL_SEC))
+    if (Number(newCount) === 1) {
       publishPresence({ userId, action: 'online', at: Date.now() }).catch(() => { })
     }
-    // set / refresh heartbeat key
-    await redis.set(HB_KEY(userId), '1', 'EX', HEARTBEAT_TTL_SEC)
   } catch (e) {
     console.error('❌ presence addOnlineUser redis error', e)
   }
@@ -41,14 +43,21 @@ export async function addOnlineUser(userId: string, socketId: string) {
 export async function removeOnlineUser(userId: string, socketId: string) {
   const set = onlineUserSockets.get(userId)
   if (!set) return
-  set.delete(socketId)
+  const deleted = set.delete(socketId)
+  if (!deleted) return
   if (set.size === 0) onlineUserSockets.delete(userId)
 
   try {
-    const newCount = await redis.decr(COUNTER_KEY(userId))
+    const script = `
+      local c = redis.call('DECR', KEYS[1])
+      if c <= 0 then
+        redis.call('DEL', KEYS[1])
+        redis.call('SREM', KEYS[2], ARGV[1])
+      end
+      return c
+    `
+    const newCount = Number(await redis.eval(script, 2, COUNTER_KEY(userId), ONLINE_SET_KEY, userId))
     if (newCount <= 0) {
-      await redis.del(COUNTER_KEY(userId))
-      await redis.srem(ONLINE_SET_KEY, userId)
       publishPresence({ userId, action: 'offline', at: Date.now() }).catch(() => { })
     }
   } catch (e) {
