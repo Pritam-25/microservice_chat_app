@@ -1,6 +1,6 @@
 "use client"
 
-import { cn } from "@/lib/utils"
+import { cn, getAuthUrl } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -44,7 +44,7 @@ export function LoginForm({
 
   const onSubmit = async (values: LoginInput) => {
     try {
-      const authBase = process.env.NEXT_PUBLIC_AUTH_URL || "http://localhost:5000"
+      const authBase = getAuthUrl()
       const response = await axios.post(`${authBase}/api/v1/auth/login`, values, {
         withCredentials: true, // ✅ store JWT cookie
       })

@@ -8,6 +8,7 @@ import useUserStore, { User } from "@/zustand/useUserStore"
 import useAuthStore from "@/zustand/useAuthStore"
 import useChatStore from "@/zustand/useChatStore"
 import axios from "axios"
+import { getApiUrl } from "@/lib/utils"
 
 type ConversationPreview = {
   id: string
@@ -40,7 +41,7 @@ export default function ChatLayout() {
   const { socket, setActiveConversationId, setMessages, conversationsVersion, activeConversationId } = useChatStore()
   const [previews, setPreviews] = useState<ConversationPreview[]>([])
   // Central API base so it's available in all handlers/effects
-  const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"
+  const apiBase = getApiUrl()
   console.log(`frontend listening to: ${apiBase}`)
 
   // If a group is active, derive its display name from previews

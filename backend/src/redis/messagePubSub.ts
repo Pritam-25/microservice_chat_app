@@ -100,27 +100,37 @@ export async function publishNewConversation(payload: unknown) {
 
 // Subscription wiring
 let subscriptionsInitialized = false
+let initPromise: Promise<void> | null = null
 export async function initSubscriptions(handlers: Partial<Record<Channel, (data: any) => void>>) {
   if (subscriptionsInitialized) return
-  await connectRedis()
-  const channelList = Object.values(CHANNELS)
-  await sub.subscribe(...channelList)
-  sub.on('message', (channel: string, message: string) => {
-    try {
-      const parsed = JSON.parse(message)
-      if (channel === CHANNELS.NEW_MESSAGE) {
-        console.log(`📥 SUB new_message id=${parsed?._id || ''} convo=${parsed?.conversation || ''} participants=${Array.isArray(parsed?.participants) ? parsed.participants.length : ''}`)
-      } else if (channel === CHANNELS.MESSAGE_STATUS) {
-        console.log(`📥 SUB message_status id=${parsed?._id || ''} status=${parsed?.status || ''} convo=${parsed?.conversation || ''}`)
+  if (initPromise) return initPromise
+
+  initPromise = (async () => {
+    await connectRedis()
+    const channelList = Object.values(CHANNELS)
+    await sub.subscribe(...channelList)
+    sub.on('message', (channel: string, message: string) => {
+      try {
+        const parsed = JSON.parse(message)
+        if (process.env.LOG_LEVEL === 'debug') {
+          if (channel === CHANNELS.NEW_MESSAGE) {
+            console.log(`📥 SUB new_message id=${parsed?._id || ''} convo=${parsed?.conversation || ''} participants=${Array.isArray(parsed?.participants) ? parsed.participants.length : ''}`)
+          } else if (channel === CHANNELS.MESSAGE_STATUS) {
+            console.log(`📥 SUB message_status id=${parsed?._id || ''} status=${parsed?.status || ''} convo=${parsed?.conversation || ''}`)
+          }
+        }
+        handlers[channel as Channel]?.(parsed)
+      } catch (e) {
+        console.error('❌ Failed to handle pub/sub message', channel, e)
       }
-      const h = handlers[channel as Channel]
-      if (h) h(parsed)
-    } catch (e) {
-      console.error('❌ Failed to handle pub/sub message', channel, e)
-    }
+    })
+    console.log('✅ Subscribed to Redis channels:', channelList.join(', '))
+    subscriptionsInitialized = true
+  })().finally(() => {
+    initPromise = null
   })
-  console.log('✅ Subscribed to Redis channels:', channelList.join(', '))
-  subscriptionsInitialized = true
+
+  return initPromise
 }
 
 export async function shutdownRedis() {

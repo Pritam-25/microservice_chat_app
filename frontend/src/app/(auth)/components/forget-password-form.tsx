@@ -2,7 +2,7 @@
 
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { cn } from "@/lib/utils"
+import { cn, getAuthUrl } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -35,7 +35,7 @@ export function ForgotPasswordForm({
 
   const onSubmit = async (values: ForgotPasswordInput) => {
     try {
-      const authBase = process.env.NEXT_PUBLIC_AUTH_URL || "http://localhost:5000"
+      const authBase = getAuthUrl()
       const response = await axios.post(
         `${authBase}/api/v1/auth/forgot-password`,
         values

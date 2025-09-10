@@ -1,6 +1,6 @@
 "use client"
 import { Input } from "@/components/ui/input"
-import { cn } from "@/lib/utils"
+import { cn, getAuthUrl, getApiUrl } from "@/lib/utils"
 import { useMemo, useState } from "react"
 import type { User } from "@/zustand/useUserStore"
 import { LogOut, Menu, PenBox, Users, Loader2, User as UserIcon, Check, CheckCheck } from "lucide-react"
@@ -100,7 +100,7 @@ export default function Sidebar({ users, onSelect, onSelectGroup, activeUserId, 
                 className="gap-2 text-red-600 focus:text-red-600"
                 onClick={async () => {
                   try {
-                    const authBase = process.env.NEXT_PUBLIC_AUTH_URL || "http://localhost:5000"
+                    const authBase = getAuthUrl()
                     await axios.post(`${authBase}/api/v1/auth/logout`, {}, { withCredentials: true })
                     // Basic client sign-out: clear authUser; in a full app, also redirect to login
                     // eslint-disable-next-line @typescript-eslint/no-unused-expressions
@@ -336,7 +336,7 @@ export default function Sidebar({ users, onSelect, onSelectGroup, activeUserId, 
                   participants,
                   createdBy: me._id,
                 }
-                const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"
+                const apiBase = getApiUrl()
                 const res = await axios.post(
                   `${apiBase}/api/v1/conversations/group`,
                   payload,

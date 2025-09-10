@@ -86,19 +86,17 @@ initSubscriptions({
       }
 
       const sender = String(msg?.sender || '')
-      const targets: string[] = []
 
-      // Emit to each participant's user room (excluding sender)
-      for (const p of participants) {
-        if (p === sender) continue
-        targets.push(`user:${p}`)
-        io.to(`user:${p}`).emit('new_message', msg)
-      }
-
-      // Also emit to conversation room
+      // Emit to conversation room (all active participants should be here)
       io.to(convId).emit('new_message', msg)
 
-      console.log(`📡 [${inst}] fan-out new_message ${msg?._id || ''} convo=${convId} participants=${participants.length} userRooms=${targets.join(',')}`)
+      // ALSO emit to user rooms for each participant to ensure sidebar updates
+      // This is crucial for updating sidebar previews when users aren't actively in the conversation
+      for (const participantId of participants) {
+        io.to(`user:${participantId}`).emit('new_message', msg)
+      }
+
+      console.log(`📡 [${inst}] fan-out new_message ${msg?._id || ''} convo=${convId} participants=${participants.length} -> conversation room + user rooms`)
     } catch (e) { console.error(`❌ [${inst}] Redis fan-out new_message error`, e) }
   },
   [CHANNELS.MESSAGE_STATUS]: async (m: any) => {
@@ -119,17 +117,15 @@ initSubscriptions({
         }
       }
 
-      // Emit to conversation room
+      // Emit to conversation room (all active participants should be here)
       io.to(convId).emit('message_status', m)
 
-      // Emit to each participant's user room
-      const targets: string[] = []
-      for (const p of participants) {
-        targets.push(`user:${p}`)
-        io.to(`user:${p}`).emit('message_status', m)
+      // ALSO emit to user rooms for each participant to ensure sidebar updates
+      for (const participantId of participants) {
+        io.to(`user:${participantId}`).emit('message_status', m)
       }
 
-      console.log(`📡 [${inst}] fan-out message_status ${m?._id || ''} status=${m?.status || ''} convo=${convId} userRooms=${targets.join(',')}`)
+      console.log(`📡 [${inst}] fan-out message_status ${m?._id || ''} status=${m?.status || ''} convo=${convId} participants=${participants.length} -> conversation room + user rooms`)
     } catch (e) { console.error(`❌ [${inst}] Redis fan-out message_status error`, e) }
   },
   [CHANNELS.PRESENCE]: (p: any) => {

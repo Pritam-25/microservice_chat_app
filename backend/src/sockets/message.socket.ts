@@ -8,6 +8,9 @@ import { addOnlineUser, removeOnlineUser } from "./presence.js";
 import { publishNewMessage, publishMessageStatus } from "@/redis/messagePubSub.js";
 import axios from 'axios'
 
+// Dedicated axios client for auth lookups with conservative timeout
+const authHttp = axios.create({ timeout: 2000 })
+
 // TTL (ms) for username cache entries
 const USERNAME_CACHE_TTL_MS = 5 * 60 * 1000 // 5 minutes
 type UsernameCacheEntry = { value: string; expires: number }
@@ -25,7 +28,7 @@ async function resolveUsername(userId: string): Promise<string> {
   if (cached) return cached
   const base = process.env.AUTH_INTERNAL_URL || process.env.AUTH_URL || 'http://auth:5000'
   try {
-    const res = await axios.get(`${base}/api/v1/users/${userId}`)
+    const res = await authHttp.get(`${base}/api/v1/users/${userId}`)
     const name = res.data?.username || res.data?.user?.username || userId
     usernameCache.set(userId, { value: name, expires: Date.now() + USERNAME_CACHE_TTL_MS })
     return name
@@ -82,10 +85,7 @@ export const registerMessageHandlers = (io: Server, socket: Socket) => {
 
             const convId = String(updated.conversation)
 
-            // Notify all sockets currently in this conversation room
-            io.to(convId).emit("message_status", updated)
-
-            // Also notify each participant individually through their user room
+            // Notify via user rooms (since user just came online, they may not be in conversation rooms yet)
             const convo = convos.find(c => String((c as any)._id) === convId)
             if (convo) {
               for (const p of (convo as any).participants) {
@@ -243,7 +243,13 @@ export const registerMessageHandlers = (io: Server, socket: Socket) => {
 
   socket.on("disconnect", () => {
     const uid = (socket as any).data?.userId as string | undefined
-    if (uid) removeOnlineUser(uid, socket.id)
+    if (uid) {
+      removeOnlineUser(uid, socket.id)
+      // Cleanup local de-dup mark to prevent memory leak
+      try {
+        localOnlineMark.delete(`${uid}:${socket.id}`)
+      } catch { }
+    }
     console.log("❌ Message socket disconnected:", socket.id);
   });
 };

@@ -6,6 +6,7 @@ import axios from "axios";
 import useUserStore from "@/zustand/useUserStore";
 import ChatLayout from "@/components/chat/chat-layout";
 import useChatStore from "@/zustand/useChatStore";
+import { getAuthUrl, getSocketUrl, getApiUrl } from "@/lib/utils";
 
 type NewMessage = { _id: string; conversation: string; sender: string; text?: string; createdAt?: string; status?: 'sent' | 'delivered' | 'read'; participants?: string[] }
 type MessageStatus = { _id: string; status: 'sent' | 'delivered' | 'read' }
@@ -17,7 +18,7 @@ export default function ChatApp() {
 
   const getUsers = useCallback(async () => {
     try {
-      const authBase = process.env.NEXT_PUBLIC_AUTH_URL || "http://localhost:5000";
+      const authBase = getAuthUrl();
       const response = await axios.get(`${authBase}/api/v1/users`, { withCredentials: true });
       updateUsers(response.data);
     } catch (error) {
@@ -34,7 +35,7 @@ export default function ChatApp() {
       try {
         await getUsers();
         if (!mounted) return;
-        const socketUrl = process.env.NEXT_PUBLIC_SOCKET_URL || "http://localhost:4000";
+        const socketUrl = getSocketUrl();
         // Send JWT in auth payload for socket authentication
         socketInstance = io(socketUrl, {
           auth: { token: authUser?.token },
@@ -43,7 +44,7 @@ export default function ChatApp() {
         setSocket(socketInstance);
 
         const onNewMessage = (msg: NewMessage) => {
-          const { upsertMessage, activeConversationId } = useChatStore.getState();
+          const { upsertMessage, activeConversationId, bumpConversationsVersion } = useChatStore.getState();
           const { users } = useUserStore.getState();
           upsertMessage({
             id: String(msg._id),
@@ -60,11 +61,15 @@ export default function ChatApp() {
               socketInstance?.emit('message_read', { messageId: msg._id });
             }
           }
+          // Trigger sidebar refresh to update conversation previews
+          bumpConversationsVersion();
         };
 
         const onMessageStatus = (msg: MessageStatus) => {
-          const { updateMessageStatus } = useChatStore.getState();
+          const { updateMessageStatus, bumpConversationsVersion } = useChatStore.getState();
           updateMessageStatus(String(msg._id), msg.status);
+          // Trigger sidebar refresh to update message status indicators in previews
+          bumpConversationsVersion();
         };
 
         const onPresenceUpdate = (p: { userId: string; status: 'online' | 'offline' }) => {
@@ -93,7 +98,7 @@ export default function ChatApp() {
 
         // Initial presence hydration (fetch once after connect)
         try {
-          const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+          const apiBase = getApiUrl();
           const headers: HeadersInit = authUser?.token ? { Authorization: `Bearer ${authUser.token}` } : {};
           const res = await fetch(`${apiBase}/online-users`, { credentials: 'include', headers });
           const data = await res.json() as { users?: string[] };

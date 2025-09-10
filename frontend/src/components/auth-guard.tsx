@@ -4,6 +4,7 @@ import axios from "axios"
 import { useRouter } from "next/navigation"
 import useAuthStore from "@/zustand/useAuthStore"
 import { Loader2 } from "lucide-react"
+import { getAuthUrl } from "@/lib/utils"
 
 type Props = {
   children: React.ReactNode
@@ -18,7 +19,7 @@ export default function AuthGuard({ children }: Props) {
     let isMounted = true
     const checkAuth = async () => {
       try {
-        const authBase = process.env.NEXT_PUBLIC_AUTH_URL || "http://localhost:5000"
+        const authBase = getAuthUrl()
         const res = await axios.get(`${authBase}/api/v1/auth/me`, {
           withCredentials: true,
         })

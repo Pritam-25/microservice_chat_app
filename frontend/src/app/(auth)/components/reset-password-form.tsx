@@ -1,6 +1,6 @@
 "use client"
 
-import { cn } from "@/lib/utils"
+import { cn, getAuthUrl } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { useForm } from "react-hook-form"
@@ -45,7 +45,7 @@ export function ResetPasswordForm({
         return
       }
 
-      const authBase = process.env.NEXT_PUBLIC_AUTH_URL || "http://localhost:5000"
+      const authBase = getAuthUrl()
       const res = await axios.post(
         `${authBase}/api/v1/auth/reset-password/${token}`,
         {

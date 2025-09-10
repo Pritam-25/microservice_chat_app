@@ -1,6 +1,9 @@
 services:
   auth:
+    container_name: microservice_chat_app_with_redis_auth
     build: ./auth
+    volumes:
+      - auth_pnpm_store:/app/.pnpm-store
     environment:
       NODE_ENV: ${NODE_ENV:-development}
       PORT: ${AUTH_PORT:-5000}
@@ -10,7 +13,10 @@ services:
       - ${AUTH_PORT:-5000}:5000
 
   backend1:
+    container_name: microservice_chat_app_with_redis_backend1
     build: ./backend
+    volumes:
+      - backend_pnpm_store:/app/.pnpm-store
     environment:
       NODE_ENV: ${NODE_ENV:-development}
       PORT: ${BACKEND1_PORT:-4000}
@@ -24,7 +30,10 @@ services:
       - auth
 
   backend2:
+    container_name: microservice_chat_app_with_redis_backend2
     build: ./backend
+    volumes:
+      - backend_pnpm_store:/app/.pnpm-store
     environment:
       NODE_ENV: ${NODE_ENV:-development}
       PORT: ${BACKEND2_PORT:-4001}
@@ -38,18 +47,30 @@ services:
       - auth
 
   frontend1:
+    container_name: microservice_chat_app_with_redis_frontend1
     build:
       context: ./frontend
       args:
-        # Public (browser) URLs must use a host resolvable outside the Docker network
+        # Public (browser) URLs
         NEXT_PUBLIC_API_URL: ${FRONTEND1_PUBLIC_BACKEND_URL:-http://localhost:${BACKEND1_PORT:-4000}}
         NEXT_PUBLIC_SOCKET_URL: ${FRONTEND1_PUBLIC_BACKEND_URL:-http://localhost:${BACKEND1_PORT:-4000}}
         NEXT_PUBLIC_AUTH_URL: ${AUTH_PUBLIC_URL:-http://localhost:${AUTH_PORT:-5000}}
+        # Internal (server-side) URLs
+        INTERNAL_API_URL: ${FRONTEND1_BACKEND_URL:-http://backend1:${BACKEND1_PORT:-4000}}
+        INTERNAL_SOCKET_URL: ${FRONTEND1_BACKEND_URL:-http://backend1:${BACKEND1_PORT:-4000}}
+        INTERNAL_AUTH_URL: ${AUTH_INTERNAL_URL:-http://auth:${AUTH_PORT:-5000}}
+    volumes:
+      - frontend_pnpm_store:/app/.pnpm-store
     environment:
       PORT: ${FRONTEND1_PORT:-3000}
+      # Public (browser) URLs
       NEXT_PUBLIC_API_URL: ${FRONTEND1_PUBLIC_BACKEND_URL:-http://localhost:${BACKEND1_PORT:-4000}}
       NEXT_PUBLIC_SOCKET_URL: ${FRONTEND1_PUBLIC_BACKEND_URL:-http://localhost:${BACKEND1_PORT:-4000}}
       NEXT_PUBLIC_AUTH_URL: ${AUTH_PUBLIC_URL:-http://localhost:${AUTH_PORT:-5000}}
+      # Internal (server-side) URLs for SSR/Node in the container
+      INTERNAL_API_URL: ${FRONTEND1_BACKEND_URL:-http://backend1:${BACKEND1_PORT:-4000}}
+      INTERNAL_SOCKET_URL: ${FRONTEND1_BACKEND_URL:-http://backend1:${BACKEND1_PORT:-4000}}
+      INTERNAL_AUTH_URL: ${AUTH_INTERNAL_URL:-http://auth:${AUTH_PORT:-5000}}
     ports:
       - ${FRONTEND1_PORT:-3000}:3000
     depends_on:
@@ -57,17 +78,30 @@ services:
       - auth
 
   frontend2:
+    container_name: microservice_chat_app_with_redis_frontend2
     build:
       context: ./frontend
       args:
+        # Public (browser) URLs
         NEXT_PUBLIC_API_URL: ${FRONTEND2_PUBLIC_BACKEND_URL:-http://localhost:${BACKEND2_PORT:-4001}}
         NEXT_PUBLIC_SOCKET_URL: ${FRONTEND2_PUBLIC_BACKEND_URL:-http://localhost:${BACKEND2_PORT:-4001}}
         NEXT_PUBLIC_AUTH_URL: ${AUTH_PUBLIC_URL:-http://localhost:${AUTH_PORT:-5000}}
+        # Internal (server-side) URLs
+        INTERNAL_API_URL: ${FRONTEND2_BACKEND_URL:-http://backend2:${BACKEND2_PORT:-4001}}
+        INTERNAL_SOCKET_URL: ${FRONTEND2_BACKEND_URL:-http://backend2:${BACKEND2_PORT:-4001}}
+        INTERNAL_AUTH_URL: ${AUTH_INTERNAL_URL:-http://auth:${AUTH_PORT:-5000}}
+    volumes:
+      - frontend_pnpm_store:/app/.pnpm-store
     environment:
       PORT: ${FRONTEND2_PORT:-3001}
+      # Public (browser) URLs
       NEXT_PUBLIC_API_URL: ${FRONTEND2_PUBLIC_BACKEND_URL:-http://localhost:${BACKEND2_PORT:-4001}}
       NEXT_PUBLIC_SOCKET_URL: ${FRONTEND2_PUBLIC_BACKEND_URL:-http://localhost:${BACKEND2_PORT:-4001}}
       NEXT_PUBLIC_AUTH_URL: ${AUTH_PUBLIC_URL:-http://localhost:${AUTH_PORT:-5000}}
+      # Internal (server-side) URLs for SSR/Node in the container
+      INTERNAL_API_URL: ${FRONTEND2_BACKEND_URL:-http://backend2:${BACKEND2_PORT:-4001}}
+      INTERNAL_SOCKET_URL: ${FRONTEND2_BACKEND_URL:-http://backend2:${BACKEND2_PORT:-4001}}
+      INTERNAL_AUTH_URL: ${AUTH_INTERNAL_URL:-http://auth:${AUTH_PORT:-5000}}
     ports:
       - ${FRONTEND2_PORT:-3001}:3001
     depends_on:
@@ -89,6 +123,10 @@ services:
 
 volumes:
   mongo_data: {}
+  # pnpm store caches for faster rebuilds
+  auth_pnpm_store: {}
+  backend_pnpm_store: {}
+  frontend_pnpm_store: {}
 
 networks:
   default:

@@ -3,6 +3,7 @@ import { useEffect } from "react"
 import axios from "axios"
 import { useRouter } from "next/navigation"
 import { LoginForm } from "@/app/(auth)/components/login-form"
+import { getAuthUrl } from "@/lib/utils"
 
 export default function LoginPage() {
   const router = useRouter()
@@ -11,7 +12,7 @@ export default function LoginPage() {
     let active = true
       ; (async () => {
         try {
-          const authBase = process.env.NEXT_PUBLIC_AUTH_URL || "http://localhost:5000"
+          const authBase = getAuthUrl()
           await axios.get(`${authBase}/api/v1/auth/me`, { withCredentials: true })
           if (!active) return
           router.replace("/chat")
