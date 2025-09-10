@@ -53,7 +53,10 @@ export function SignUpForm({
       // Handle success
       toast.success("Successfully signed up!")
       console.log("✅ Signup successful:", response.data)
-      setAuthUser({ username: response.data.user.username })
+      setAuthUser({
+        username: response.data.user.username,
+        ...(response.data?.token ? { token: response.data.token } : {}),
+      })
       router.replace("/chat")
 
     } catch (error: unknown) {

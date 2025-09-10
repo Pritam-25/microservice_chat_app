@@ -51,7 +51,10 @@ export function LoginForm({
 
       toast.success("Login successful!")
       console.log("✅ Login successful:", response.data)
-      setAuthUser({ username: response.data.user.username })
+      setAuthUser({
+        username: response.data.user.username,
+        ...(response.data?.token ? { token: response.data.token } : {}),
+      })
       router.replace("/chat") // redirect after login
     } catch (error: unknown) {
       const msg = getAxiosErrorMessage(error)
