@@ -9,7 +9,7 @@ import Redis, { RedisOptions } from 'ioredis'
  * If you have a CA cert, you may also provide REDIS_CA_CERT or REDIS_CA_CERT_PATH.
  */
 
-const REDIS_URL = process.env.REDIS_URL 
+const REDIS_URL = process.env.REDIS_URL
 if (!REDIS_URL) {
   throw new Error('REDIS_URL is required (e.g. rediss://user:pass@host:port)')
 }
@@ -67,6 +67,7 @@ export const CHANNELS = {
   NEW_MESSAGE: 'chat:new_message',
   MESSAGE_STATUS: 'chat:message_status',
   PRESENCE: 'chat:presence',
+  NEW_CONVERSATION: 'chat:new_conversation',
 } as const
 
 export type Channel = typeof CHANNELS[keyof typeof CHANNELS]
@@ -88,6 +89,13 @@ export async function publishMessageStatus(payload: unknown) {
 }
 export async function publishPresence(payload: unknown) {
   return pub.publish(CHANNELS.PRESENCE, JSON.stringify(payload))
+}
+export async function publishNewConversation(payload: unknown) {
+  try {
+    const p: any = payload as any
+    console.log(`🔊 PUB new_conversation id=${p?._id || ''} name=${p?.name || ''} participants=${Array.isArray(p?.participants) ? p.participants.length : ''}`)
+  } catch { }
+  return pub.publish(CHANNELS.NEW_CONVERSATION, JSON.stringify(payload))
 }
 
 // Subscription wiring

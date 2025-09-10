@@ -71,9 +71,17 @@ export default function ChatApp() {
           setUserOnline(p.userId, p.status === 'online');
         }
 
+        const onNewConversation = (conv: { _id: string; name?: string; isGroup?: boolean; participants?: string[] }) => {
+          console.log("📡 new_conversation received:", conv);
+          // Trigger sidebar refresh to show the new group
+          const { bumpConversationsVersion } = useChatStore.getState();
+          bumpConversationsVersion();
+        }
+
         socketInstance.on("new_message", onNewMessage);
         socketInstance.on("message_status", onMessageStatus);
         socketInstance.on("presence_update", onPresenceUpdate);
+        socketInstance.on("new_conversation", onNewConversation);
         socketInstance.on("connect", () => {
           console.log("🔌 socket connected");
           const { activeConversationId } = useChatStore.getState();
@@ -108,6 +116,7 @@ export default function ChatApp() {
         socketInstance.off("new_message");
         socketInstance.off("message_status");
         socketInstance.off("presence_update");
+        socketInstance.off("new_conversation");
         socketInstance.off("connect");
         socketInstance.off("disconnect");
         socketInstance.disconnect();

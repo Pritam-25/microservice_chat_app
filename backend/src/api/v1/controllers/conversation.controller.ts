@@ -10,6 +10,7 @@ import {
   CreateGroupBodySchema,
   GetUserConversationsParamsSchema,
 } from "@/api/v1/schemas/index.js";
+import { publishNewConversation } from "@/redis/messagePubSub.js";
 
 
 
@@ -86,8 +87,20 @@ export async function createGroupConversation(req: Request, res: Response) {
       finalAdmins,
       avatarUrl
     )
-    
+
     console.log("✅ Group conversation created:", convo)
+
+    // Notify all participants about the new group via Redis pub/sub
+    publishNewConversation({
+      _id: convo._id,
+      isGroup: convo.isGroup,
+      name: convo.name,
+      participants: finalParticipants,
+      admins: finalAdmins,
+      avatarUrl: convo.avatarUrl,
+      createdAt: convo.createdAt,
+      updatedAt: convo.updatedAt,
+    }).catch(e => console.error("❌ Failed to publish new conversation:", e))
 
     res.status(201).json({
       message: "Group conversation created successfully",

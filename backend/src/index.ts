@@ -143,6 +143,34 @@ initSubscriptions({
       }
       io.emit('presence_update', payload)
     } catch (e) { console.error('❌ Redis fan-out presence error', e) }
+  },
+  [CHANNELS.NEW_CONVERSATION]: async (conv: any) => {
+    const inst = process.env.INSTANCE_NAME || 'instance'
+    try {
+      const convId = String(conv?._id || '')
+      if (!convId) return
+
+      let participants: string[] = Array.isArray(conv?.participants) ? conv.participants.map((p: any) => String(p)) : []
+
+      // If participants missing, fetch from DB as fallback
+      if (!participants.length) {
+        try {
+          const convo = await Conversation.findById(convId).select('participants')
+          if (convo) participants = (convo as any).participants.map((p: any) => String(p))
+        } catch (e) {
+          console.warn(`⚠️ [${inst}] Failed to fetch participants for new conversation ${convId}:`, e)
+        }
+      }
+
+      // Emit to each participant's user room to trigger sidebar refresh
+      const targets: string[] = []
+      for (const p of participants) {
+        targets.push(`user:${p}`)
+        io.to(`user:${p}`).emit('new_conversation', conv)
+      }
+
+      console.log(`📡 [${inst}] fan-out new_conversation ${convId} name=${conv?.name || ''} participants=${participants.length} userRooms=${targets.join(',')}`)
+    } catch (e) { console.error(`❌ [${inst}] Redis fan-out new_conversation error`, e) }
   }
 }).catch(err => console.error('❌ Failed to init Redis subscriptions', err))
 

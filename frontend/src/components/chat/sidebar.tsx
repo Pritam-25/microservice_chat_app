@@ -288,22 +288,17 @@ export default function Sidebar({ users, onSelect, onSelectGroup, activeUserId, 
               return (
                 <CommandItem
                   key={u._id}
-                  onSelect={(val) => {
-                    // Prevent closing dialog on select; toggling handled by checkbox container
-                    if (val) return
+                  onSelect={() => {
+                    // Handle selection on the entire item
+                    setSelectedIds((prev) =>
+                      prev.includes(u._id)
+                        ? prev.filter((id) => id !== u._id)
+                        : [...prev, u._id]
+                    )
                   }}
+                  className="cursor-pointer"
                 >
-                  <div
-                    className="mr-2"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      setSelectedIds((prev) =>
-                        prev.includes(u._id)
-                          ? prev.filter((id) => id !== u._id)
-                          : [...prev, u._id]
-                      )
-                    }}
-                  >
+                  <div className="mr-2">
                     <Checkbox checked={checked} aria-label={`Select ${u.username}`} />
                   </div>
                   <div className="size-8 rounded-full bg-blue-100 border-2 mr-2" />
