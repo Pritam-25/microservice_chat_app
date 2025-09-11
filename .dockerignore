@@ -1,0 +1,61 @@
+# Node modules
+**/node_modules
+**/.pnpm-store
+
+# Build outputs
+**/.next
+**/dist
+
+# Development files
+**/.env
+# Allow public frontend build env (only NEXT_PUBLIC_*). These are safe to bake.
+!frontend/.env
+**/.env.local
+**/.env.development
+**/.env.production
+
+# Git
+.git
+.gitignore
+
+# Documentation
+README.md
+DEPLOYMENT.md
+
+# Docker files (except the ones we need)
+docker-compose.yml
+docker-compose.*.yml
+!docker-compose.allinone.yml
+
+# IDE
+.vscode
+.idea
+
+# Logs
+**/*.log
+**/logs
+
+# Cache
+**/.cache
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Postman collections
+**/postman
+
+# Test files
+**/*.test.*
+**/test
+**/tests
+
+# Coverage
+**/coverage
+
+# Temporary files
+**/tmp
+**/temp
+
+# Keep ecosystem config for all-in-one build
+!ecosystem.config.js

@@ -12,14 +12,19 @@ import cookieParser from "cookie-parser";
 
 
 const PORT = process.env.PORT || 5000;
+const AUTH_HOST = process.env.AUTH_HOST || 'http://localhost'
 
 const app = express();
 app.use(express.json());
 app.use(cookieParser());
 
+// Allow frontends served at AUTH_HOST:3000/3001
 app.use(cors({
-  origin: ["http://localhost:3000", "http://localhost:3001", "http://localhost:3002"], // frontend origin
-  credentials: true, // to allow cookies from frontend
+  origin: [
+    `${AUTH_HOST}:3000`,
+    `${AUTH_HOST}:3001`,
+  ],
+  credentials: true,
 }));
 
 app.use('/api/v1/auth', authRouter);

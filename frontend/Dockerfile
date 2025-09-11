@@ -12,8 +12,16 @@ ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL} \
   NEXT_PUBLIC_SOCKET_URL=${NEXT_PUBLIC_SOCKET_URL} \
   NEXT_PUBLIC_AUTH_URL=${NEXT_PUBLIC_AUTH_URL}
 
+# Improve network reliability for pnpm fetches inside Docker
+ENV PNPM_FETCH_RETRIES=6 \
+  PNPM_FETCH_RETRY_FACTOR=2 \
+  PNPM_FETCH_RETRY_MINTIMEOUT=20000 \
+  PNPM_FETCH_RETRY_MAXTIMEOUT=120000 \
+  PNPM_NETWORK_CONCURRENCY=8
+
 COPY package.json pnpm-lock.yaml* ./
-RUN pnpm install --frozen-lockfile
+# Add retries and lower concurrency to reduce npm registry socket hangups
+RUN pnpm install --frozen-lockfile --network-concurrency ${PNPM_NETWORK_CONCURRENCY}
 COPY . .
 RUN pnpm build
 

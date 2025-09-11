@@ -15,13 +15,13 @@ import { initSubscriptions, CHANNELS, shutdownRedis } from "@/redis/messagePubSu
 import { Conversation } from "@/models/conversation.js";
 
 const PORT = process.env.PORT || 4000;
+const BE_HOST = process.env.BE_HOST || 'http://localhost'
 
 const app = express();
 app.use(cors({
   origin: [
-    "http://localhost:3000",
-    "http://localhost:3001",
-    "http://localhost:3002",
+    `${BE_HOST}:3000`,
+    `${BE_HOST}:3001`,
   ],
   credentials: true,
 }))
@@ -36,9 +36,8 @@ const server = createServer(app);
 const io = new Server(server, {
   cors: {
     origin: [
-      "http://localhost:3000",
-      "http://localhost:3001",
-      "http://localhost:3002",
+      `${BE_HOST}:3000`,
+      `${BE_HOST}:3001`,
     ],
     methods: ["GET", "POST"],
     credentials: true,

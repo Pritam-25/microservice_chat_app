@@ -1,0 +1,38 @@
+services:
+  microservice-chat-app:
+    image: pritam25/microservice-chat-allinone:latest
+    environment:
+      NODE_ENV: ${NODE_ENV:-production}
+      MONGO_URI: ${MONGO_ATLAS_URI}
+      JWT_SECRET: ${JWT_SECRET}
+      REDIS_URL: ${REDIS_URL}
+      # Frontend URLs for API communication
+      NEXT_PUBLIC_API_URL: http://localhost:4000
+      NEXT_PUBLIC_SOCKET_URL: http://localhost:4000
+      NEXT_PUBLIC_AUTH_URL: http://localhost:5000
+    ports:
+      - "3000:3000" # Frontend 1
+      - "3001:3001" # Frontend 2
+      - "4000:4000" # Backend 1
+      - "4001:4001" # Backend 2
+      - "5000:5000" # Auth Service
+    restart: unless-stopped
+# For external dependencies (if not using cloud services)
+#  redis:
+#    image: valkey/valkey:7-alpine
+#    ports:
+#      - "6379:6379"
+#    command: ["valkey-server", "--save", "", "--appendonly", "no"]
+#
+#  mongodb:
+#    image: mongo:7
+#    ports:
+#      - "27017:27017"
+#    environment:
+#      MONGO_INITDB_ROOT_USERNAME: admin
+#      MONGO_INITDB_ROOT_PASSWORD: password
+#    volumes:
+#      - mongo_data:/data/db
+
+#volumes:
+#  mongo_data:

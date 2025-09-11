@@ -1,6 +1,7 @@
 services:
   auth:
     build: ./auth
+    image: pritam25/microservice-auth:lts
     environment:
       NODE_ENV: ${NODE_ENV:-development}
       PORT: ${AUTH_PORT:-5000}
@@ -11,6 +12,7 @@ services:
 
   backend1:
     build: ./backend
+    image: pritam25/microservice-backend1:lts
     environment:
       NODE_ENV: ${NODE_ENV:-development}
       PORT: ${BACKEND1_PORT:-4000}
@@ -25,6 +27,7 @@ services:
 
   backend2:
     build: ./backend
+    image: pritam25/microservice-backend2:lts
     environment:
       NODE_ENV: ${NODE_ENV:-development}
       PORT: ${BACKEND2_PORT:-4001}
@@ -41,15 +44,12 @@ services:
     build:
       context: ./frontend
       args:
-        # Public (browser) URLs must use a host resolvable outside the Docker network
         NEXT_PUBLIC_API_URL: ${FRONTEND1_PUBLIC_BACKEND_URL:-http://localhost:${BACKEND1_PORT:-4000}}
         NEXT_PUBLIC_SOCKET_URL: ${FRONTEND1_PUBLIC_BACKEND_URL:-http://localhost:${BACKEND1_PORT:-4000}}
         NEXT_PUBLIC_AUTH_URL: ${AUTH_PUBLIC_URL:-http://localhost:${AUTH_PORT:-5000}}
+    image: pritam25/microservice-frontend1:lts
     environment:
       PORT: ${FRONTEND1_PORT:-3000}
-      NEXT_PUBLIC_API_URL: ${FRONTEND1_PUBLIC_BACKEND_URL:-http://localhost:${BACKEND1_PORT:-4000}}
-      NEXT_PUBLIC_SOCKET_URL: ${FRONTEND1_PUBLIC_BACKEND_URL:-http://localhost:${BACKEND1_PORT:-4000}}
-      NEXT_PUBLIC_AUTH_URL: ${AUTH_PUBLIC_URL:-http://localhost:${AUTH_PORT:-5000}}
     ports:
       - ${FRONTEND1_PORT:-3000}:3000
     depends_on:
@@ -63,29 +63,15 @@ services:
         NEXT_PUBLIC_API_URL: ${FRONTEND2_PUBLIC_BACKEND_URL:-http://localhost:${BACKEND2_PORT:-4001}}
         NEXT_PUBLIC_SOCKET_URL: ${FRONTEND2_PUBLIC_BACKEND_URL:-http://localhost:${BACKEND2_PORT:-4001}}
         NEXT_PUBLIC_AUTH_URL: ${AUTH_PUBLIC_URL:-http://localhost:${AUTH_PORT:-5000}}
+    image: pritam25/microservice-frontend2:lts
     environment:
       PORT: ${FRONTEND2_PORT:-3001}
-      NEXT_PUBLIC_API_URL: ${FRONTEND2_PUBLIC_BACKEND_URL:-http://localhost:${BACKEND2_PORT:-4001}}
-      NEXT_PUBLIC_SOCKET_URL: ${FRONTEND2_PUBLIC_BACKEND_URL:-http://localhost:${BACKEND2_PORT:-4001}}
-      NEXT_PUBLIC_AUTH_URL: ${AUTH_PUBLIC_URL:-http://localhost:${AUTH_PORT:-5000}}
     ports:
       - ${FRONTEND2_PORT:-3001}:3001
     depends_on:
       - backend2
       - auth
 
-  # Uncomment to run local Redis instead of external Aiven
-  # redis:
-  #   image: valkey/valkey:7-alpine
-  #   container_name: chatapp_redis
-  #   ports:
-  #     - ${REDIS_PORT:-6379}:6379
-  #   command: ["valkey-server", "--save", "", "--appendonly", "no"]
-  #   healthcheck:
-  #     test: ["CMD", "valkey-cli", "ping"]
-  #     interval: 5s
-  #     timeout: 3s
-  #     retries: 20
 
 volumes:
   mongo_data: {}

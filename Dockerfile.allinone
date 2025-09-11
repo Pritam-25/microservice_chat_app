@@ -1,0 +1,35 @@
+# Multi-service container with all microservices
+FROM node:20-alpine
+
+# Install process manager
+RUN npm install -g pm2 pnpm
+
+# Create app directory
+WORKDIR /app
+
+# Copy all service files
+COPY auth/ ./auth/
+COPY backend/ ./backend/
+COPY frontend/ ./frontend/
+
+# Build Auth Service
+WORKDIR /app/auth
+RUN corepack enable && pnpm install --frozen-lockfile && pnpm build
+
+# Build Backend Service
+WORKDIR /app/backend
+RUN pnpm install --frozen-lockfile && pnpm build
+
+# Build Frontend Service
+WORKDIR /app/frontend
+RUN corepack enable && pnpm install --frozen-lockfile && pnpm build
+
+# Copy PM2 configuration
+WORKDIR /app
+COPY ecosystem.config.js ./
+
+# Expose all ports
+EXPOSE 3000 3001 4000 4001 5000
+
+# Start all services with PM2
+CMD ["pm2-runtime", "start", "ecosystem.config.js"]
